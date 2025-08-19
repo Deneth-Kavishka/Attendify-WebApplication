@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(210 25% 7.8431%);
+  --card: hsl(180 6.6667% 97.0588%);
+  --card-foreground: hsl(210 25% 7.8431%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(210 25% 7.8431%);
+  --primary: hsl(210 90% 48.0392%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(142 69.2308% 45.0980%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --accent: hsl(36 100% 50.1961%);
+  --accent-foreground: hsl(0 0% 100%);
+  --destructive: hsl(0 84.2105% 60.3922%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 1.9608% 90%);
+  --muted-foreground: hsl(210 25% 7.8431%);
+  --border: hsl(201.4286 30.4348% 90.9804%);
+  --input: hsl(200 23.0769% 97.4510%);
+  --ring: hsl(202.8169 89.1213% 53.1373%);
+  --surface: hsl(0 0% 100%);
+  --surface-background: hsl(210 16.6667% 97.6471%);
+  --font-inter: 'Inter', sans-serif;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --background: hsl(0 0% 0%);
+  --foreground: hsl(200 6.6667% 91.1765%);
+  --card: hsl(228 9.8039% 10%);
+  --card-foreground: hsl(0 0% 85.0980%);
+  --popover: hsl(0 0% 0%);
+  --popover-foreground: hsl(200 6.6667% 91.1765%);
+  --primary: hsl(210 90% 48.0392%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(142 69.2308% 45.0980%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --accent: hsl(36 100% 50.1961%);
+  --accent-foreground: hsl(0 0% 100%);
+  --destructive: hsl(0 84.2105% 60.3922%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --muted: hsl(0 0% 9.4118%);
+  --muted-foreground: hsl(210 3.3898% 46.2745%);
+  --border: hsl(210 5.2632% 14.9020%);
+  --input: hsl(207.6923 27.6596% 18.4314%);
+  --ring: hsl(202.8169 89.1213% 53.1373%);
+  --surface: hsl(228 9.8039% 10%);
+  --surface-background: hsl(228 9.8039% 6%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-inter antialiased bg-surface-background text-foreground;
+  }
+
+  .font-inter {
+    font-family: var(--font-inter);
+  }
+}
+
+@layer components {
+  .sidebar-nav-item {
+    @apply flex items-center space-x-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors;
+  }
+  
+  .sidebar-nav-item.active {
+    @apply bg-primary text-white;
+  }
+  
+  .sidebar-nav-item.active:hover {
+    @apply bg-primary;
+  }
+  
+  .stats-card {
+    @apply bg-surface rounded-xl shadow-sm border border-gray-200 p-6;
+  }
+  
+  .hardware-status-online {
+    @apply bg-green-50 border border-green-200 rounded-lg;
+  }
+  
+  .hardware-status-offline {
+    @apply bg-red-50 border border-red-200 rounded-lg;
+  }
+  
+  .attendance-feed-item {
+    @apply flex items-center space-x-4 p-3 bg-gray-50 rounded-lg;
+  }
+}
+
+@layer utilities {
+  .animate-pulse-dot {
+    animation: pulse-dot 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes pulse-dot {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+}
