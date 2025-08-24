@@ -7,6 +7,8 @@ import { AuthProvider } from "./lib/auth.jsx";
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import AdminDashboard from "@/pages/admin-dashboard";
+import AdminStudents from "@/pages/admin-students";
+import AdminLecturers from "@/pages/admin-lecturers";
 import LecturerPortal from "@/pages/lecturer-portal";
 import StudentPortal from "@/pages/student-portal";
 import ProtectedRoute from "@/components/ui/protected-route";
@@ -16,11 +18,30 @@ function Router() {
     <Switch>
       <Route path="/" component={Login} />
       <Route path="/login" component={Login} />
-      <Route path="/admin">
-        <ProtectedRoute role="admin">
-          <AdminDashboard />
-        </ProtectedRoute>
-      </Route>
+      <Route
+        path="/admin"
+        component={() => (
+          <ProtectedRoute role="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        )}
+      />
+      <Route
+        path="/admin/students"
+        component={() => (
+          <ProtectedRoute role="admin">
+            <AdminStudents />
+          </ProtectedRoute>
+        )}
+      />
+      <Route
+        path="/admin/lecturers"
+        component={() => (
+          <ProtectedRoute role="admin">
+            <AdminLecturers />
+          </ProtectedRoute>
+        )}
+      />
       <Route path="/lecturer">
         <ProtectedRoute role="lecturer">
           <LecturerPortal />

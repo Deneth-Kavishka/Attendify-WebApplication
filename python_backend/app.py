@@ -71,6 +71,66 @@ def enroll_face():
         print(f"Face enrollment error: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
+@app.route('/api/face/enroll-multiple', methods=['POST'])
+def enroll_multiple_faces():
+    try:
+        data = request.get_json()
+        student_id = data.get('student_id')
+        images_data = data.get('images', [])
+        
+        if not student_id or not images_data:
+            return jsonify({"error": "Missing student_id or images"}), 400
+        
+        if len(images_data) < 10:
+            return jsonify({"error": "Minimum 10 images required for face training"}), 400
+        
+        processed_images = []
+        for img_info in images_data:
+            try:
+                image_data = img_info.get('data')
+                if not image_data:
+                    continue
+                    
+                # Decode base64 image
+                image_bytes = base64.b64decode(image_data.split(',')[1])
+                image = Image.open(io.BytesIO(image_bytes))
+                image_array = np.array(image)
+                
+                # Convert RGB to BGR for OpenCV
+                image_bgr = cv2.cvtColor(image_array, cv2.COLOR_RGB2BGR)
+                processed_images.append(image_bgr)
+                
+            except Exception as e:
+                print(f"Error processing image {img_info.get('name', 'unknown')}: {e}")
+                continue
+        
+        if len(processed_images) < 10:
+            return jsonify({"error": f"Could only process {len(processed_images)} images, minimum 10 required"}), 400
+        
+        # Enroll multiple faces
+        success, encodings_count = face_service.enroll_multiple_faces(processed_images, student_id)
+        
+        if success:
+            # Update student record in main database
+            requests.post(f'http://localhost:5000/api/face-recognition/enroll-multiple', 
+                         json={
+                             'studentId': student_id,
+                             'encodingsCount': encodings_count,
+                             'status': 'completed'
+                         })
+            
+            return jsonify({
+                "message": f"Face training completed successfully with {encodings_count} encodings",
+                "encodings_count": encodings_count,
+                "images_processed": len(processed_images)
+            })
+        else:
+            return jsonify({"error": "Face training failed - could not process any images"}), 400
+            
+    except Exception as e:
+        print(f"Multiple face enrollment error: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
+
 @app.route('/api/face/recognize', methods=['POST'])
 def recognize_face():
     try:
