@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import Sidebar from "@/components/ui/sidebar";
 import StatsCard from "@/components/ui/stats-card";
 import AttendanceFeed from "@/components/ui/attendance-feed";
 import HardwareStatus from "@/components/ui/hardware-status";
 import EnhancedStudentForm from "@/components/ui/enhanced-student-form";
+import ClassCreationForm from "@/components/ui/class-creation-form";
 import {
   Dialog,
   DialogContent,
@@ -15,8 +17,10 @@ import { useAuth } from "@/lib/auth.jsx";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const [location, setLocation] = useLocation();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showStudentForm, setShowStudentForm] = useState(false);
+  const [showClassForm, setShowClassForm] = useState(false);
 
   // Update clock every second
   useEffect(() => {
@@ -173,9 +177,40 @@ export default function AdminDashboard() {
                       <i className="fas fa-user-plus"></i>
                       <span>Add New Student</span>
                     </button>
-                    <button className="w-full flex items-center space-x-3 p-3 bg-secondary text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <button
+                      onClick={() => setShowClassForm(true)}
+                      className="w-full flex items-center space-x-3 p-3 bg-secondary text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
                       <i className="fas fa-plus-circle"></i>
                       <span>Create New Class</span>
+                    </button>
+                    <button
+                      onClick={() => setLocation("/admin/attendance")}
+                      className="w-full flex items-center space-x-3 p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <i className="fas fa-calendar-check"></i>
+                      <span>View Attendance</span>
+                    </button>
+                    <button
+                      onClick={() => setLocation("/admin/exam-eligibility")}
+                      className="w-full flex items-center space-x-3 p-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    >
+                      <i className="fas fa-graduation-cap"></i>
+                      <span>Exam Eligibility</span>
+                    </button>
+                    <button
+                      onClick={() => setLocation("/admin/lecturers")}
+                      className="w-full flex items-center space-x-3 p-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      <i className="fas fa-chalkboard-teacher"></i>
+                      <span>Manage Lecturers</span>
+                    </button>
+                    <button
+                      onClick={() => setLocation("/admin/hardware")}
+                      className="w-full flex items-center space-x-3 p-3 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-colors"
+                    >
+                      <i className="fas fa-microchip"></i>
+                      <span>Hardware Status</span>
                     </button>
                     <button className="w-full flex items-center space-x-3 p-3 bg-accent text-white rounded-lg hover:bg-orange-600 transition-colors">
                       <i className="fas fa-file-download"></i>
@@ -247,7 +282,10 @@ export default function AdminDashboard() {
                 <h3 className="text-lg font-semibold text-gray-900">
                   Today's Classes Overview
                 </h3>
-                <button className="text-primary hover:text-blue-700 text-sm font-medium">
+                <button
+                  onClick={() => setLocation("/admin/classes")}
+                  className="text-primary hover:text-blue-700 text-sm font-medium"
+                >
                   View All Classes
                 </button>
               </div>
@@ -278,6 +316,23 @@ export default function AdminDashboard() {
               window.location.reload();
             }}
             onCancel={() => setShowStudentForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Class Creation Dialog */}
+      <Dialog open={showClassForm} onOpenChange={setShowClassForm}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Class</DialogTitle>
+          </DialogHeader>
+          <ClassCreationForm
+            onSuccess={() => {
+              setShowClassForm(false);
+              // Refresh stats
+              window.location.reload();
+            }}
+            onCancel={() => setShowClassForm(false)}
           />
         </DialogContent>
       </Dialog>

@@ -19,15 +19,18 @@ export interface IStorage {
   // User management
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
 
   // Student management
   getStudent(id: string): Promise<Student | undefined>;
+  getStudentById(id: string): Promise<Student | undefined>;
   getStudentByUserId(userId: string): Promise<Student | undefined>;
   getStudentByStudentId(studentId: string): Promise<Student | undefined>;
   getStudentByRfidCard(rfidCard: string): Promise<Student | undefined>;
   getStudentByNic(nic: string): Promise<Student | undefined>;
+  getStudentsByClass(classId: string): Promise<Student[]>;
   createStudent(student: InsertStudent): Promise<Student>;
   updateStudent(
     id: string,
@@ -46,9 +49,11 @@ export interface IStorage {
 
   // Class management
   getClass(id: string): Promise<Class | undefined>;
+  getClassById(id: string): Promise<Class | undefined>;
   getClassesByLecturerId(lecturerId: string): Promise<Class[]>;
   createClass(classData: InsertClass): Promise<Class>;
   getAllClasses(): Promise<Class[]>;
+  getTotalClassesByClass(classId: string): Promise<number>;
 
   // Attendance management
   getAttendanceRecord(id: string): Promise<AttendanceRecord | undefined>;
@@ -60,6 +65,10 @@ export interface IStorage {
     date: Date
   ): Promise<AttendanceRecord[]>;
   getAttendanceByStudent(studentId: string): Promise<AttendanceRecord[]>;
+  getAttendanceByStudentAndClass(
+    studentId: string,
+    classId: string
+  ): Promise<AttendanceRecord[]>;
   getAttendanceByClass(classId: string): Promise<AttendanceRecord[]>;
 
   // Hardware management
@@ -155,6 +164,10 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
       (user) => user.username === username
@@ -198,6 +211,18 @@ export class MemStorage implements IStorage {
   async getStudentByStudentId(studentId: string): Promise<Student | undefined> {
     return Array.from(this.students.values()).find(
       (student) => student.studentId === studentId
+    );
+  }
+
+  async getStudentById(id: string): Promise<Student | undefined> {
+    return this.students.get(id);
+  }
+
+  async getStudentsByClass(classId: string): Promise<Student[]> {
+    // For demo purposes, return all students
+    // In a real implementation, this would filter by class enrollment
+    return Array.from(this.students.values()).filter(
+      (student) => student.active
     );
   }
 
@@ -333,6 +358,16 @@ export class MemStorage implements IStorage {
     return Array.from(this.classes.values());
   }
 
+  async getClassById(id: string): Promise<Class | undefined> {
+    return this.classes.get(id);
+  }
+
+  async getTotalClassesByClass(classId: string): Promise<number> {
+    // For demo purposes, return a fixed number
+    // In a real implementation, this would count total scheduled classes
+    return 30; // Assuming 30 classes per semester
+  }
+
   // Attendance methods
   async getAttendanceRecord(id: string): Promise<AttendanceRecord | undefined> {
     return this.attendanceRecords.get(id);
@@ -379,6 +414,15 @@ export class MemStorage implements IStorage {
   async getAttendanceByStudent(studentId: string): Promise<AttendanceRecord[]> {
     return Array.from(this.attendanceRecords.values()).filter(
       (record) => record.studentId === studentId
+    );
+  }
+
+  async getAttendanceByStudentAndClass(
+    studentId: string,
+    classId: string
+  ): Promise<AttendanceRecord[]> {
+    return Array.from(this.attendanceRecords.values()).filter(
+      (record) => record.studentId === studentId && record.classId === classId
     );
   }
 

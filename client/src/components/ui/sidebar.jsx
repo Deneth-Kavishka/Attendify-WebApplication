@@ -15,7 +15,11 @@ const adminNavItems = [
     label: "Attendance",
     icon: "fas fa-clipboard-check",
   },
-  { path: "/admin/exams", label: "Exam Eligibility", icon: "fas fa-file-alt" },
+  {
+    path: "/admin/exam-eligibility",
+    label: "Exam Eligibility",
+    icon: "fas fa-graduation-cap",
+  },
   {
     path: "/admin/hardware",
     label: "Hardware Status",
