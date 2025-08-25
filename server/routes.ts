@@ -79,6 +79,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Student Profile Route
+  app.get("/api/students/profile", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.userId;
+      const student = await storage.getStudentByUserId(userId);
+
+      if (!student) {
+        return res.status(404).json({ message: "Student profile not found" });
+      }
+
+      const user = await storage.getUser(userId);
+      const studentProfile = {
+        ...student,
+        fullName: user?.fullName,
+        email: user?.email,
+        department: user?.department,
+        role: user?.role,
+        createdAt: user?.createdAt,
+      };
+
+      res.json(studentProfile);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get student profile" });
+    }
+  });
+
   app.post("/api/users", requireAuth, async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
@@ -489,6 +515,437 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Lecturer deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete lecturer" });
+    }
+  });
+
+  // Lecturer-specific routes
+  app.get("/api/lecturers/:id/classes", requireAuth, async (req, res) => {
+    try {
+      const lecturerId = req.params.id;
+      const classes = await storage.getAllClasses();
+      const lecturerClasses = classes.filter(
+        (cls: any) => cls.lecturerId === lecturerId
+      );
+      res.json(lecturerClasses);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get lecturer classes" });
+    }
+  });
+
+  app.get(
+    "/api/lecturers/:id/dashboard-stats",
+    requireAuth,
+    async (req, res) => {
+      try {
+        const lecturerId = req.params.id;
+        const classes = await storage.getAllClasses();
+        const lecturerClasses = classes.filter(
+          (cls: any) => cls.lecturerId === lecturerId
+        );
+        const attendanceRecords = await storage.getAllAttendanceRecords();
+
+        // Calculate stats for lecturer's classes
+        const classIds = lecturerClasses.map((cls: any) => cls.id);
+        const relevantAttendance = attendanceRecords.filter((record: any) =>
+          classIds.includes(record.classId)
+        );
+
+        const today = new Date().toISOString().split("T")[0];
+        const todayAttendance = relevantAttendance.filter(
+          (record: any) =>
+            new Date(record.attendanceDate).toISOString().split("T")[0] ===
+            today
+        );
+
+        const totalStudents = new Set(
+          relevantAttendance.map((r: any) => r.studentId)
+        ).size;
+        const todayAttendanceRate =
+          todayAttendance.length > 0
+            ? (todayAttendance.filter((r: any) => r.status === "present")
+                .length /
+                todayAttendance.length) *
+              100
+            : 0;
+
+        const thisWeek = new Date();
+        thisWeek.setDate(thisWeek.getDate() - 7);
+        const weeklyAttendance = relevantAttendance.filter(
+          (record: any) => new Date(record.attendanceDate) >= thisWeek
+        );
+        const weeklyAttendanceRate =
+          weeklyAttendance.length > 0
+            ? (weeklyAttendance.filter((r: any) => r.status === "present")
+                .length /
+                weeklyAttendance.length) *
+              100
+            : 0;
+
+        res.json({
+          totalClasses: lecturerClasses.length,
+          totalStudents,
+          todayAttendance: Math.round(todayAttendanceRate),
+          weeklyAttendance: Math.round(weeklyAttendanceRate),
+          totalSessions: todayAttendance.length,
+          activeClasses: lecturerClasses.filter((cls: any) => cls.active)
+            .length,
+        });
+      } catch (error) {
+        res
+          .status(500)
+          .json({ message: "Failed to get lecturer dashboard stats" });
+      }
+    }
+  );
+
+  // Generate attendance report for lecturer
+  app.post(
+    "/api/lecturers/:id/generate-report",
+    requireAuth,
+    async (req, res) => {
+      try {
+        const lecturerId = req.params.id;
+        const { classId, startDate, endDate, type } = req.body;
+
+        if (!classId || !startDate || !endDate || !type) {
+          return res.status(400).json({
+            message:
+              "Missing required fields: classId, startDate, endDate, type",
+          });
+        }
+
+        // Get class details
+        const classes = await storage.getAllClasses();
+        const selectedClass = classes.find(
+          (cls: any) => cls.id === classId && cls.lecturerId === lecturerId
+        );
+
+        if (!selectedClass) {
+          return res.status(404).json({
+            message: "Class not found or not assigned to this lecturer",
+          });
+        }
+
+        // Get attendance records for the specified date range
+        const attendanceRecords = await storage.getAllAttendanceRecords();
+        const filteredRecords = attendanceRecords.filter((record: any) => {
+          const recordDate = new Date(record.attendanceDate);
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+          return (
+            record.classId === classId &&
+            recordDate >= start &&
+            recordDate <= end
+          );
+        });
+
+        // Get students for this class
+        const students = await storage.getAllStudents();
+        const enrolledStudentIds = Array.from(
+          new Set(filteredRecords.map((r: any) => r.studentId))
+        );
+        const enrolledStudents = students.filter((student: any) =>
+          enrolledStudentIds.includes(student.id)
+        );
+
+        // Calculate statistics
+        const reportData = {
+          classInfo: {
+            className: selectedClass.className,
+            classCode: selectedClass.classCode,
+            room: selectedClass.room,
+            semester: selectedClass.semester,
+            academicYear: selectedClass.academicYear,
+          },
+          reportPeriod: {
+            startDate,
+            endDate,
+            type,
+          },
+          statistics: {
+            totalStudents: enrolledStudents.length,
+            totalSessions: Array.from(
+              new Set(filteredRecords.map((r: any) => r.attendanceDate))
+            ).length,
+            totalAttendanceRecords: filteredRecords.length,
+            overallAttendanceRate:
+              filteredRecords.length > 0
+                ? Math.round(
+                    (filteredRecords.filter((r: any) => r.status === "present")
+                      .length /
+                      filteredRecords.length) *
+                      100
+                  )
+                : 0,
+          },
+          studentDetails: enrolledStudents
+            .map((student: any) => {
+              const studentRecords = filteredRecords.filter(
+                (r: any) => r.studentId === student.id
+              );
+              const presentCount = studentRecords.filter(
+                (r: any) => r.status === "present"
+              ).length;
+              const attendanceRate =
+                studentRecords.length > 0
+                  ? Math.round((presentCount / studentRecords.length) * 100)
+                  : 0;
+
+              return {
+                studentId: student.studentId,
+                name: student.name || student.studentId,
+                totalSessions: studentRecords.length,
+                presentSessions: presentCount,
+                absentSessions: studentRecords.length - presentCount,
+                attendanceRate,
+                status:
+                  attendanceRate >=
+                  (selectedClass.minAttendancePercentage || 75)
+                    ? "Good"
+                    : "At Risk",
+              };
+            })
+            .sort((a, b) => b.attendanceRate - a.attendanceRate),
+          sessionDetails: Array.from(
+            new Set(filteredRecords.map((r: any) => r.attendanceDate))
+          )
+            .sort()
+            .map((date: string) => {
+              const dayRecords = filteredRecords.filter(
+                (r: any) => r.attendanceDate === date
+              );
+              const presentCount = dayRecords.filter(
+                (r: any) => r.status === "present"
+              ).length;
+              return {
+                date,
+                totalStudents: dayRecords.length,
+                presentStudents: presentCount,
+                absentStudents: dayRecords.length - presentCount,
+                attendanceRate:
+                  dayRecords.length > 0
+                    ? Math.round((presentCount / dayRecords.length) * 100)
+                    : 0,
+              };
+            }),
+          generatedAt: new Date().toISOString(),
+          generatedBy: lecturerId,
+        };
+
+        res.json({
+          success: true,
+          message: "Report generated successfully",
+          report: reportData,
+        });
+      } catch (error) {
+        console.error("Error generating report:", error);
+        res.status(500).json({
+          message: "Failed to generate report",
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+  );
+
+  app.get("/api/classes/:id/students", requireAuth, async (req, res) => {
+    try {
+      const classId = req.params.id;
+      const students = await storage.getAllStudents();
+      const attendanceRecords = await storage.getAttendanceByClass(classId);
+
+      // Get students enrolled in this class
+      const enrolledStudentIds = Array.from(
+        new Set(attendanceRecords.map((r: any) => r.studentId))
+      );
+      const enrolledStudents = students.filter((student: any) =>
+        enrolledStudentIds.includes(student.id)
+      );
+
+      // Calculate attendance percentage for each student
+      const studentsWithAttendance = enrolledStudents.map((student: any) => {
+        const studentAttendance = attendanceRecords.filter(
+          (r: any) => r.studentId === student.id
+        );
+        const presentCount = studentAttendance.filter(
+          (r: any) => r.status === "present"
+        ).length;
+        const attendancePercentage =
+          studentAttendance.length > 0
+            ? (presentCount / studentAttendance.length) * 100
+            : 0;
+
+        return {
+          ...student,
+          attendancePercentage: Math.round(attendancePercentage),
+          totalSessions: studentAttendance.length,
+          presentSessions: presentCount,
+        };
+      });
+
+      res.json(studentsWithAttendance);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get class students" });
+    }
+  });
+
+  app.get("/api/classes/:id/attendance", requireAuth, async (req, res) => {
+    try {
+      const classId = req.params.id;
+      const { date, startDate, endDate } = req.query;
+
+      let attendanceRecords = await storage.getAttendanceByClass(classId);
+
+      if (date) {
+        attendanceRecords = attendanceRecords.filter(
+          (record: any) =>
+            new Date(record.attendanceDate).toISOString().split("T")[0] === date
+        );
+      } else if (startDate && endDate) {
+        attendanceRecords = attendanceRecords.filter((record: any) => {
+          const recordDate = new Date(record.attendanceDate)
+            .toISOString()
+            .split("T")[0];
+          return recordDate >= startDate && recordDate <= endDate;
+        });
+      }
+
+      // Group by date and get student details
+      const students = await storage.getAllStudents();
+      const groupedAttendance: any = {};
+
+      for (const record of attendanceRecords) {
+        const recordDate = new Date(record.attendanceDate)
+          .toISOString()
+          .split("T")[0];
+        if (!groupedAttendance[recordDate]) groupedAttendance[recordDate] = [];
+
+        const student = students.find((s: any) => s.id === record.studentId);
+        let studentName = "Unknown";
+
+        if (student) {
+          try {
+            const user = await storage.getUser(student.userId);
+            studentName = user?.fullName || "Unknown";
+          } catch (e) {
+            studentName = student.studentId || "Unknown";
+          }
+        }
+
+        groupedAttendance[recordDate].push({
+          ...record,
+          studentName,
+          studentId: student?.studentId || record.studentId,
+        });
+      }
+
+      res.json(groupedAttendance);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get class attendance" });
+    }
+  });
+
+  app.post("/api/classes/:id/attendance", requireAuth, async (req, res) => {
+    try {
+      const classId = req.params.id;
+      const { studentId, status, timestamp, method = "manual" } = req.body;
+
+      const attendanceData = {
+        studentId,
+        classId,
+        status,
+        attendanceDate: timestamp ? new Date(timestamp) : new Date(),
+        method,
+      };
+
+      const attendanceRecord = await storage.createAttendanceRecord(
+        attendanceData
+      );
+
+      // Broadcast real-time update
+      broadcast({
+        type: "attendance-update",
+        data: attendanceRecord,
+      });
+
+      res.status(201).json(attendanceRecord);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to record attendance" });
+    }
+  });
+
+  app.get("/api/classes/:id/reports", requireAuth, async (req, res) => {
+    try {
+      const classId = req.params.id;
+      const { type = "summary", startDate, endDate } = req.query;
+
+      const classData = await storage.getClass(classId);
+      if (!classData) {
+        return res.status(404).json({ message: "Class not found" });
+      }
+
+      const attendanceRecords = await storage.getAttendanceByClass(classId);
+
+      let filteredAttendance = attendanceRecords;
+      if (startDate && endDate) {
+        filteredAttendance = attendanceRecords.filter((record: any) => {
+          const recordDate = new Date(record.attendanceDate)
+            .toISOString()
+            .split("T")[0];
+          return recordDate >= startDate && recordDate <= endDate;
+        });
+      }
+
+      const students = await storage.getAllStudents();
+      const enrolledStudentIds = Array.from(
+        new Set(filteredAttendance.map((r: any) => r.studentId))
+      );
+      const enrolledStudents = students.filter((student: any) =>
+        enrolledStudentIds.includes(student.id)
+      );
+
+      const report = {
+        classInfo: classData,
+        period: { startDate, endDate },
+        totalStudents: enrolledStudents.length,
+        totalSessions: Array.from(
+          new Set(
+            filteredAttendance.map(
+              (r: any) => new Date(r.attendanceDate).toISOString().split("T")[0]
+            )
+          )
+        ).length,
+        overallAttendanceRate:
+          filteredAttendance.length > 0
+            ? (filteredAttendance.filter((r: any) => r.status === "present")
+                .length /
+                filteredAttendance.length) *
+              100
+            : 0,
+        studentDetails: enrolledStudents.map((student: any) => {
+          const studentAttendance = filteredAttendance.filter(
+            (r: any) => r.studentId === student.id
+          );
+          const presentCount = studentAttendance.filter(
+            (r: any) => r.status === "present"
+          ).length;
+          const attendancePercentage =
+            studentAttendance.length > 0
+              ? (presentCount / studentAttendance.length) * 100
+              : 0;
+
+          return {
+            ...student,
+            attendancePercentage: Math.round(attendancePercentage),
+            totalSessions: studentAttendance.length,
+            presentSessions: presentCount,
+            absentSessions: studentAttendance.length - presentCount,
+          };
+        }),
+      };
+
+      res.json(report);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate class report" });
     }
   });
 
@@ -1767,6 +2224,672 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching device health:", error);
       res.status(500).json({ message: "Failed to fetch device health" });
+    }
+  });
+
+  // Reports API endpoints
+  app.get("/api/reports/overview", async (req, res) => {
+    try {
+      const overview = {
+        totalReports: 24,
+        reportsThisWeek: 5,
+        overallAttendanceRate: 87.3,
+        attendanceTrend: "+2.4% from last week",
+        hardwareUptime: 96.8,
+        devicesOnline: 3,
+        totalDevices: 3,
+        systemEvents: 12,
+        eventsToday: 3,
+        devicePerformance: {
+          esp32_cam: {
+            successRate: 94.2,
+            avgResponseTime: 250,
+            totalScans: 1250,
+          },
+          rfid: {
+            successRate: 98.1,
+            avgResponseTime: 120,
+            totalScans: 890,
+          },
+        },
+      };
+      res.json(overview);
+    } catch (error) {
+      console.error("Error fetching reports overview:", error);
+      res.status(500).json({ message: "Failed to fetch reports overview" });
+    }
+  });
+
+  app.post("/api/reports/generate", async (req, res) => {
+    try {
+      const { type, dateRange, format, filters } = req.body;
+
+      // Simulate report generation
+      const reportId = Date.now().toString();
+      const report = {
+        id: reportId,
+        type,
+        title: `${type} Report - ${new Date().toLocaleDateString()}`,
+        dateRange,
+        format,
+        status: "completed",
+        generatedAt: new Date(),
+        downloadUrl: `/api/reports/${reportId}/download`,
+        data: {
+          summary: {
+            totalRecords: 150,
+            attendanceRate: 89.3,
+            deviceUptime: 96.7,
+          },
+          details: [], // Would contain actual report data
+        },
+      };
+
+      res.json(report);
+    } catch (error) {
+      console.error("Error generating report:", error);
+      res.status(500).json({ message: "Failed to generate report" });
+    }
+  });
+
+  app.get("/api/reports/history", async (req, res) => {
+    try {
+      const reports = [
+        {
+          id: "1",
+          title: "Weekly Attendance Report",
+          type: "attendance",
+          format: "PDF",
+          generatedAt: new Date(Date.now() - 86400000),
+          size: "2.4 MB",
+          status: "completed",
+        },
+        {
+          id: "2",
+          title: "Hardware Performance Report",
+          type: "hardware",
+          format: "Excel",
+          generatedAt: new Date(Date.now() - 172800000),
+          size: "1.8 MB",
+          status: "completed",
+        },
+        {
+          id: "3",
+          title: "Monthly Summary Report",
+          type: "summary",
+          format: "PDF",
+          generatedAt: new Date(Date.now() - 259200000),
+          size: "3.2 MB",
+          status: "completed",
+        },
+      ];
+
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching reports history:", error);
+      res.status(500).json({ message: "Failed to fetch reports history" });
+    }
+  });
+
+  app.get("/api/reports/:id/download", async (req, res) => {
+    try {
+      const { id } = req.params;
+      // In a real app, this would serve the actual file
+      res.json({
+        message: `Download initiated for report ${id}`,
+        downloadUrl: `/downloads/report-${id}.pdf`,
+      });
+    } catch (error) {
+      console.error("Error downloading report:", error);
+      res.status(500).json({ message: "Failed to download report" });
+    }
+  });
+
+  app.delete("/api/reports/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      res.json({ message: `Report ${id} deleted successfully` });
+    } catch (error) {
+      console.error("Error deleting report:", error);
+      res.status(500).json({ message: "Failed to delete report" });
+    }
+  });
+
+  // Settings API endpoints
+  app.get("/api/settings/system", async (req, res) => {
+    try {
+      const settings = {
+        systemName: "SmartTrack Attendance System",
+        timeZone: "UTC+05:30",
+        autoBackup: true,
+        backupFrequency: "daily",
+        sessionTimeout: 30,
+        dataRetention: 365,
+        notifications: {
+          email: true,
+          sms: false,
+          push: true,
+        },
+      };
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching system settings:", error);
+      res.status(500).json({ message: "Failed to fetch system settings" });
+    }
+  });
+
+  app.put("/api/settings/system", async (req, res) => {
+    try {
+      const settings = req.body;
+      // In a real app, this would update the database
+      res.json({
+        message: "System settings updated successfully",
+        settings,
+      });
+    } catch (error) {
+      console.error("Error updating system settings:", error);
+      res.status(500).json({ message: "Failed to update system settings" });
+    }
+  });
+
+  app.get("/api/settings/hardware", async (req, res) => {
+    try {
+      const settings = {
+        esp32_cam: {
+          enabled: true,
+          scanInterval: 100,
+          confidence: 0.8,
+          resolution: "640x480",
+          autoRestart: true,
+          networkConfig: {
+            ssid: "SmartTrack_Network",
+            ip: "192.168.1.100",
+            port: 8080,
+          },
+        },
+        rfid: {
+          enabled: true,
+          scanInterval: 50,
+          powerLevel: 75,
+          autoRestart: true,
+          networkConfig: {
+            ip: "192.168.1.101",
+            port: 8081,
+          },
+        },
+      };
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching hardware settings:", error);
+      res.status(500).json({ message: "Failed to fetch hardware settings" });
+    }
+  });
+
+  app.put("/api/settings/hardware", async (req, res) => {
+    try {
+      const settings = req.body;
+      // In a real app, this would update device configurations
+      res.json({
+        message: "Hardware settings updated successfully",
+        settings,
+      });
+    } catch (error) {
+      console.error("Error updating hardware settings:", error);
+      res.status(500).json({ message: "Failed to update hardware settings" });
+    }
+  });
+
+  app.post("/api/settings/hardware/restart/:deviceType", async (req, res) => {
+    try {
+      const { deviceType } = req.params;
+      // Simulate device restart
+      res.json({
+        message: `${deviceType} device restart initiated`,
+        status: "restarting",
+      });
+    } catch (error) {
+      console.error("Error restarting device:", error);
+      res.status(500).json({ message: "Failed to restart device" });
+    }
+  });
+
+  app.get("/api/settings/users", async (req, res) => {
+    try {
+      const users = [
+        {
+          id: "1",
+          name: "John Admin",
+          email: "admin@smarttrack.com",
+          role: "admin",
+          status: "active",
+          lastLogin: new Date(Date.now() - 3600000),
+          permissions: ["all"],
+        },
+        {
+          id: "2",
+          name: "Sarah Lecturer",
+          email: "sarah@university.edu",
+          role: "lecturer",
+          status: "active",
+          lastLogin: new Date(Date.now() - 7200000),
+          permissions: ["view_attendance", "manage_students"],
+        },
+        {
+          id: "3",
+          name: "Mike Student",
+          email: "mike@student.edu",
+          role: "student",
+          status: "active",
+          lastLogin: new Date(Date.now() - 1800000),
+          permissions: ["view_own_attendance"],
+        },
+      ];
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/settings/users", async (req, res) => {
+    try {
+      const userData = req.body;
+      const newUser = {
+        id: Date.now().toString(),
+        ...userData,
+        status: "active",
+        createdAt: new Date(),
+      };
+      res.json({
+        message: "User created successfully",
+        user: newUser,
+      });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.put("/api/settings/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userData = req.body;
+      res.json({
+        message: `User ${id} updated successfully`,
+        user: { id, ...userData },
+      });
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/settings/users/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      res.json({ message: `User ${id} deleted successfully` });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  app.post("/api/settings/backup/create", async (req, res) => {
+    try {
+      const backup = {
+        id: Date.now().toString(),
+        type: "full",
+        size: "45.2 MB",
+        createdAt: new Date(),
+        status: "completed",
+      };
+      res.json({
+        message: "Backup created successfully",
+        backup,
+      });
+    } catch (error) {
+      console.error("Error creating backup:", error);
+      res.status(500).json({ message: "Failed to create backup" });
+    }
+  });
+
+  app.get("/api/settings/backup/history", async (req, res) => {
+    try {
+      const backups = [
+        {
+          id: "1",
+          type: "full",
+          size: "43.8 MB",
+          createdAt: new Date(Date.now() - 86400000),
+          status: "completed",
+        },
+        {
+          id: "2",
+          type: "incremental",
+          size: "12.4 MB",
+          createdAt: new Date(Date.now() - 172800000),
+          status: "completed",
+        },
+        {
+          id: "3",
+          type: "full",
+          size: "41.2 MB",
+          createdAt: new Date(Date.now() - 604800000),
+          status: "completed",
+        },
+      ];
+      res.json(backups);
+    } catch (error) {
+      console.error("Error fetching backup history:", error);
+      res.status(500).json({ message: "Failed to fetch backup history" });
+    }
+  });
+
+  app.post("/api/settings/backup/restore/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      res.json({
+        message: `Restore from backup ${id} initiated`,
+        status: "restoring",
+      });
+    } catch (error) {
+      console.error("Error restoring backup:", error);
+      res.status(500).json({ message: "Failed to restore backup" });
+    }
+  });
+
+  app.post("/api/settings/maintenance/optimize", async (req, res) => {
+    try {
+      res.json({
+        message: "Database optimization initiated",
+        status: "optimizing",
+        estimatedTime: "5-10 minutes",
+      });
+    } catch (error) {
+      console.error("Error optimizing database:", error);
+      res.status(500).json({ message: "Failed to optimize database" });
+    }
+  });
+
+  app.post("/api/settings/maintenance/clean-logs", async (req, res) => {
+    try {
+      res.json({
+        message: "Log cleanup completed",
+        spaceSaved: "156 MB",
+        logsRemoved: 2450,
+      });
+    } catch (error) {
+      console.error("Error cleaning logs:", error);
+      res.status(500).json({ message: "Failed to clean logs" });
+    }
+  });
+
+  app.post("/api/settings/maintenance/diagnostics", async (req, res) => {
+    try {
+      // Simulate system diagnostics
+      const diagnostics = {
+        systemHealth: "Good",
+        databaseStatus: "Healthy",
+        hardwareConnections: "All devices responding",
+        diskSpace: "78% available",
+        memoryUsage: "45% used",
+        cpuLoad: "Low",
+        networkLatency: "12ms average",
+        securityStatus: "No threats detected",
+      };
+
+      res.json({
+        message: "System diagnostics completed successfully",
+        status: "completed",
+        results: diagnostics,
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      console.error("Error running diagnostics:", error);
+      res.status(500).json({ message: "Failed to run system diagnostics" });
+    }
+  });
+
+  // Notifications endpoints
+  app.get("/api/notifications", requireAuth, async (req, res) => {
+    try {
+      // Get mock notifications data
+      const notifications = [
+        {
+          id: 1,
+          title: "Low Attendance Alert",
+          message: "15 students are below 75% attendance threshold",
+          type: "warning",
+          read: false,
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+        },
+        {
+          id: 2,
+          title: "System Update",
+          message: "Face recognition model updated successfully",
+          type: "info",
+          read: false,
+          createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 hours ago
+        },
+        {
+          id: 3,
+          title: "Hardware Status",
+          message: "ESP32-CAM device #3 reconnected successfully",
+          type: "success",
+          read: true,
+          createdAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6 hours ago
+        },
+        {
+          id: 4,
+          title: "New Registration",
+          message: "5 new students registered today",
+          type: "info",
+          read: false,
+          createdAt: new Date(Date.now() - 8 * 60 * 60 * 1000), // 8 hours ago
+        },
+        {
+          id: 5,
+          title: "Backup Completed",
+          message: "Daily database backup completed successfully",
+          type: "success",
+          read: true,
+          createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+        },
+      ];
+
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.put("/api/notifications/:id/read", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      // In a real app, you would update the notification in the database
+      res.json({ message: "Notification marked as read", id });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  // Today's classes endpoint
+  app.get("/api/classes/today", requireAuth, async (req, res) => {
+    try {
+      const today = new Date();
+      const dayOfWeek = today.toLocaleDateString("en-US", { weekday: "long" });
+
+      // Get mock today's classes data
+      const todaysClasses = [
+        {
+          id: 1,
+          name: "Web Development",
+          lecturer: "Dr. Sarah Johnson",
+          startTime: "09:00",
+          endTime: "11:00",
+          status: "completed",
+          enrolledCount: 45,
+          attendanceCount: 42,
+          location: "Lab A-301",
+        },
+        {
+          id: 2,
+          name: "Database Systems",
+          lecturer: "Prof. Michael Chen",
+          startTime: "13:00",
+          endTime: "15:00",
+          status: "active",
+          enrolledCount: 38,
+          attendanceCount: 35,
+          location: "Room B-205",
+        },
+        {
+          id: 3,
+          name: "Mobile App Development",
+          lecturer: "Dr. Emily Brown",
+          startTime: "15:30",
+          endTime: "17:30",
+          status: "scheduled",
+          enrolledCount: 32,
+          attendanceCount: 0,
+          location: "Lab C-102",
+        },
+      ].filter((classItem) => {
+        // Only show classes for certain days to simulate real schedule
+        return ["Monday", "Wednesday", "Friday"].includes(dayOfWeek);
+      });
+
+      res.json(todaysClasses);
+    } catch (error) {
+      console.error("Error fetching today's classes:", error);
+      res.status(500).json({ message: "Failed to fetch today's classes" });
+    }
+  });
+
+  // Report generation endpoint
+  app.post("/api/reports/generate", requireAuth, async (req, res) => {
+    try {
+      const { type } = req.body;
+
+      // Simulate report generation with different content based on type
+      const reportContent: { [key: string]: string } = {
+        "attendance-summary":
+          "Attendance Summary Report - Generated on " +
+          new Date().toISOString(),
+        "student-performance":
+          "Student Performance Report - Generated on " +
+          new Date().toISOString(),
+        "hardware-status":
+          "Hardware Status Report - Generated on " + new Date().toISOString(),
+      };
+
+      const content =
+        reportContent[type] ||
+        "Generic Report - Generated on " + new Date().toISOString();
+
+      // Create a simple PDF-like response (in a real app, you'd use a PDF generation library)
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${type}-report.pdf"`
+      );
+      res.send(Buffer.from(content, "utf-8"));
+    } catch (error) {
+      console.error("Error generating report:", error);
+      res.status(500).json({ message: "Failed to generate report" });
+    }
+  });
+
+  // Profile management endpoints
+  app.put("/api/users/profile", requireAuth, async (req: any, res) => {
+    try {
+      const { fullName, email, phone, department } = req.body;
+      const userId = req.user.id;
+
+      // In a real app, you would update the user in the database
+      const updatedUser = {
+        id: userId,
+        fullName,
+        email,
+        phone,
+        department,
+        updatedAt: new Date(),
+      };
+
+      res.json({
+        message: "Profile updated successfully",
+        user: updatedUser,
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  app.put("/api/users/change-password", requireAuth, async (req: any, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.user.id;
+
+      // In a real app, you would verify the current password and update it
+      // For demo purposes, we'll simulate a successful password change
+      res.json({
+        message: "Password changed successfully",
+        timestamp: new Date(),
+      });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
+  app.get("/api/users/activity", requireAuth, async (req: any, res) => {
+    try {
+      // Mock activity logs
+      const activityLogs = [
+        {
+          action: "Login",
+          description: "Successful login to admin dashboard",
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          ipAddress: "192.168.1.100",
+          icon: "fa-sign-in-alt",
+        },
+        {
+          action: "Settings Updated",
+          description: "System settings were modified",
+          timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
+          ipAddress: "192.168.1.100",
+          icon: "fa-cog",
+        },
+        {
+          action: "Student Added",
+          description: "New student registration completed",
+          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
+          ipAddress: "192.168.1.100",
+          icon: "fa-user-plus",
+        },
+        {
+          action: "Report Generated",
+          description: "Attendance summary report downloaded",
+          timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
+          ipAddress: "192.168.1.100",
+          icon: "fa-file-download",
+        },
+        {
+          action: "Profile Updated",
+          description: "Profile information was updated",
+          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
+          ipAddress: "192.168.1.100",
+          icon: "fa-user-edit",
+        },
+      ];
+
+      res.json(activityLogs);
+    } catch (error) {
+      console.error("Error fetching activity logs:", error);
+      res.status(500).json({ message: "Failed to fetch activity logs" });
     }
   });
 

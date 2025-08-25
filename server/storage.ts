@@ -70,6 +70,7 @@ export interface IStorage {
     classId: string
   ): Promise<AttendanceRecord[]>;
   getAttendanceByClass(classId: string): Promise<AttendanceRecord[]>;
+  getAllAttendanceRecords(): Promise<AttendanceRecord[]>;
 
   // Hardware management
   getHardwareDevice(id: string): Promise<HardwareDevice | undefined>;
@@ -430,6 +431,10 @@ export class MemStorage implements IStorage {
     return Array.from(this.attendanceRecords.values()).filter(
       (record) => record.classId === classId
     );
+  }
+
+  async getAllAttendanceRecords(): Promise<AttendanceRecord[]> {
+    return Array.from(this.attendanceRecords.values());
   }
 
   // Hardware methods

@@ -37,7 +37,17 @@ const lecturerNavItems = [
     label: "Attendance",
     icon: "fas fa-clipboard-check",
   },
+  {
+    path: "/lecturer/students",
+    label: "Students",
+    icon: "fas fa-users",
+  },
   { path: "/lecturer/reports", label: "Reports", icon: "fas fa-chart-bar" },
+  {
+    path: "/lecturer/schedule",
+    label: "Schedule",
+    icon: "fas fa-calendar-alt",
+  },
 ];
 
 const studentNavItems = [
@@ -55,9 +65,30 @@ const studentNavItems = [
   { path: "/student/profile", label: "Profile", icon: "fas fa-user" },
 ];
 
-export default function Sidebar({ hardwareStatus = [] }) {
+export default function Sidebar({
+  hardwareStatus = [],
+  activeTab,
+  setActiveTab,
+}) {
   const { user, logout } = useAuth();
   const [location] = useLocation();
+
+  // Map lecturer and student navigation paths to tab values
+  const lecturerTabMapping = {
+    "/lecturer": "dashboard",
+    "/lecturer/classes": "my-classes",
+    "/lecturer/attendance": "attendance",
+    "/lecturer/students": "students",
+    "/lecturer/reports": "reports",
+    "/lecturer/schedule": "schedule",
+  };
+
+  const studentTabMapping = {
+    "/student": "dashboard",
+    "/student/attendance": "attendance",
+    "/student/eligibility": "eligibility",
+    "/student/profile": "profile",
+  };
 
   const getNavItems = () => {
     switch (user?.role) {
@@ -70,6 +101,38 @@ export default function Sidebar({ hardwareStatus = [] }) {
       default:
         return [];
     }
+  };
+
+  // Handle navigation for lecturer and student (tabs) vs admin (routing)
+  const handleNavClick = (item, e) => {
+    if (user?.role === "lecturer" && setActiveTab) {
+      e.preventDefault();
+      const tabValue = lecturerTabMapping[item.path];
+      if (tabValue) {
+        console.log(`Switching to lecturer tab: ${tabValue}`);
+        setActiveTab(tabValue);
+      }
+    } else if (user?.role === "student" && setActiveTab) {
+      e.preventDefault();
+      const tabValue = studentTabMapping[item.path];
+      if (tabValue) {
+        console.log(`Switching to student tab: ${tabValue}`);
+        setActiveTab(tabValue);
+      }
+    }
+    // For admin role, let the Link handle navigation normally
+  };
+
+  // Determine if an item is active
+  const isItemActive = (item) => {
+    if (user?.role === "lecturer" && activeTab) {
+      const tabValue = lecturerTabMapping[item.path];
+      return tabValue === activeTab;
+    } else if (user?.role === "student" && activeTab) {
+      const tabValue = studentTabMapping[item.path];
+      return tabValue === activeTab;
+    }
+    return location === item.path;
   };
 
   const navItems = getNavItems();
@@ -99,8 +162,9 @@ export default function Sidebar({ hardwareStatus = [] }) {
               <Link href={item.path}>
                 <a
                   className={`sidebar-nav-item ${
-                    location === item.path ? "active" : ""
+                    isItemActive(item) ? "active" : ""
                   }`}
+                  onClick={(e) => handleNavClick(item, e)}
                 >
                   <i className={`${item.icon} w-5`}></i>
                   <span>{item.label}</span>
