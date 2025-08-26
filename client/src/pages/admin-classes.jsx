@@ -1301,17 +1301,21 @@ export default function AdminClasses() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <div className="space-y-1">
-                            {classItem.schedule
-                              ?.slice(0, 2)
-                              .map((schedule, index) => (
-                                <div key={index} className="text-xs">
-                                  {schedule.day}: {schedule.startTime}-
-                                  {schedule.endTime}
+                            {classItem.schedule ? (
+                              <>
+                                <div className="text-xs">
+                                  Days:{" "}
+                                  {Array.isArray(classItem.schedule.days)
+                                    ? classItem.schedule.days.join(", ")
+                                    : classItem.schedule.days || "N/A"}
                                 </div>
-                              ))}
-                            {classItem.schedule?.length > 2 && (
-                              <div className="text-xs text-gray-400">
-                                +{classItem.schedule.length - 2} more
+                                <div className="text-xs">
+                                  Time: {classItem.schedule.time || "N/A"}
+                                </div>
+                              </>
+                            ) : (
+                              <div className="text-xs text-gray-500">
+                                No schedule set
                               </div>
                             )}
                           </div>
@@ -1495,27 +1499,50 @@ export default function AdminClasses() {
 
                 <TabsContent value="schedule" className="space-y-4">
                   <div className="space-y-3">
-                    {selectedClass.schedule?.map((schedule, index) => (
-                      <Card key={index}>
+                    {selectedClass.schedule ? (
+                      <Card>
                         <CardContent className="p-4">
-                          <div className="flex justify-between items-center">
+                          <div className="space-y-3">
                             <div>
-                              <h4 className="font-medium text-gray-900 capitalize">
-                                {schedule.day}
+                              <h4 className="font-medium text-gray-900">
+                                Class Schedule
                               </h4>
-                              <p className="text-sm text-gray-600">
-                                {schedule.startTime} - {schedule.endTime} (
-                                {schedule.duration}h)
-                              </p>
+                              <div className="mt-2 space-y-2">
+                                <div className="flex items-center space-x-2">
+                                  <i className="fas fa-calendar-alt text-primary"></i>
+                                  <span className="text-sm text-gray-900">
+                                    Days:{" "}
+                                    {Array.isArray(selectedClass.schedule.days)
+                                      ? selectedClass.schedule.days.join(", ")
+                                      : selectedClass.schedule.days || "N/A"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <i className="fas fa-clock text-primary"></i>
+                                  <span className="text-sm text-gray-900">
+                                    Time: {selectedClass.schedule.time || "N/A"}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <Badge variant="outline">
-                              {schedule.duration} hour
-                              {schedule.duration !== 1 ? "s" : ""}
-                            </Badge>
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                    ) : (
+                      <Card>
+                        <CardContent className="p-4">
+                          <div className="text-center py-8">
+                            <i className="fas fa-calendar-times text-4xl text-gray-300 mb-4"></i>
+                            <p className="text-gray-500">
+                              No schedule configured
+                            </p>
+                            <p className="text-sm text-gray-400">
+                              Schedule will be displayed here once configured
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                 </TabsContent>
 

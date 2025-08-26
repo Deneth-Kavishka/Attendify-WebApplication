@@ -1186,11 +1186,22 @@ export default function LecturerPortal() {
                               </span>
                             </div>
                             {classItem.schedule && (
-                              <div className="flex items-center space-x-2">
-                                <i className="fas fa-clock text-gray-500"></i>
-                                <span className="text-sm">
-                                  Schedule: {JSON.stringify(classItem.schedule)}
-                                </span>
+                              <div className="space-y-1">
+                                <div className="flex items-center space-x-2">
+                                  <i className="fas fa-calendar-alt text-gray-500"></i>
+                                  <span className="text-sm">
+                                    Days:{" "}
+                                    {Array.isArray(classItem.schedule.days)
+                                      ? classItem.schedule.days.join(", ")
+                                      : classItem.schedule.days || "N/A"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <i className="fas fa-clock text-gray-500"></i>
+                                  <span className="text-sm">
+                                    Time: {classItem.schedule.time || "N/A"}
+                                  </span>
+                                </div>
                               </div>
                             )}
                             <div className="flex items-center space-x-2">
