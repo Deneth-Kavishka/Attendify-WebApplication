@@ -236,12 +236,12 @@ export default function StudentPortal() {
               onValueChange={setActiveTab}
               className="space-y-6"
             >
-              <TabsList className="grid grid-cols-4 w-full max-w-md">
+           {/*<TabsList className="grid grid-cols-4 w-full max-w-md">
                 <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                 <TabsTrigger value="attendance">Attendance</TabsTrigger>
                 <TabsTrigger value="eligibility">Eligibility</TabsTrigger>
                 <TabsTrigger value="profile">Profile</TabsTrigger>
-              </TabsList>
+              </TabsList> */}   
 
               {/* Dashboard Tab */}
               <TabsContent value="dashboard" className="space-y-6">
