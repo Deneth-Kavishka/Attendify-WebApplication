@@ -37,7 +37,7 @@ const unsigned long captureInterval = 5000;    // 5 seconds
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Smart Attendance ESP32-CAM Starting...");
+  Serial.println("Attendify ESP32-CAM Starting...");
   
   // Initialize EEPROM
   EEPROM.begin(512);

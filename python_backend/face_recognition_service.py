@@ -41,6 +41,63 @@ class FaceRecognitionService:
         except Exception as e:
             print(f"Error saving encodings: {e}")
     
+    def enroll_multiple_faces(self, images, student_id):
+        """Enroll multiple faces for a student for better recognition accuracy"""
+        encodings = []
+        successful_enrollments = 0
+        
+        # Remove existing encodings for this student if any
+        while student_id in self.known_face_names:
+            index = self.known_face_names.index(student_id)
+            self.known_face_encodings.pop(index)
+            self.known_face_names.pop(index)
+        
+        for i, image in enumerate(images):
+            try:
+                # Convert BGR to RGB
+                rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                
+                # Find face locations
+                face_locations = face_recognition.face_locations(rgb_image)
+                
+                if len(face_locations) == 0:
+                    print(f"No face found in image {i+1}")
+                    continue
+                
+                if len(face_locations) > 1:
+                    print(f"Multiple faces found in image {i+1}, using the first detected face")
+                    # Still proceed with the first face found
+                
+                # Get face encoding
+                face_encodings = face_recognition.face_encodings(rgb_image, face_locations[:1])  # Only take the first face
+                
+                if len(face_encodings) == 0:
+                    print(f"Could not encode face in image {i+1}")
+                    continue
+                
+                face_encoding = face_encodings[0]
+                encodings.append(face_encoding)
+                
+                # Add each encoding as a separate entry (for robustness)
+                self.known_face_encodings.append(face_encoding)
+                self.known_face_names.append(student_id)
+                successful_enrollments += 1
+                
+                print(f"Successfully processed image {i+1} for student {student_id}")
+                
+            except Exception as e:
+                print(f"Error processing image {i+1} for student {student_id}: {e}")
+                continue
+        
+        if successful_enrollments > 0:
+            # Save encodings
+            self.save_encodings()
+            print(f"Successfully enrolled {successful_enrollments} face encodings for student {student_id}")
+            return True, successful_enrollments
+        else:
+            print(f"Failed to enroll any faces for student {student_id}")
+            return False, 0
+
     def enroll_face(self, image, student_id):
         """Enroll a new face for a student"""
         try:

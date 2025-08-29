@@ -19,19 +19,27 @@ export interface IStorage {
   // User management
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
 
   // Student management
   getStudent(id: string): Promise<Student | undefined>;
+  getStudentById(id: string): Promise<Student | undefined>;
   getStudentByUserId(userId: string): Promise<Student | undefined>;
   getStudentByStudentId(studentId: string): Promise<Student | undefined>;
+  getStudentByRfidCard(rfidCard: string): Promise<Student | undefined>;
+  getStudentByNic(nic: string): Promise<Student | undefined>;
+  getStudentsByClass(classId: string): Promise<Student[]>;
   createStudent(student: InsertStudent): Promise<Student>;
   updateStudent(
     id: string,
     student: Partial<Student>
   ): Promise<Student | undefined>;
+  deleteStudent(id: string): Promise<boolean>;
   getAllStudents(): Promise<Student[]>;
+  getAvailableRfidCards(): Promise<string[]>;
+  generateNewRfidCard(): Promise<string>;
 
   // Lecturer management
   getLecturer(id: string): Promise<Lecturer | undefined>;
@@ -41,9 +49,11 @@ export interface IStorage {
 
   // Class management
   getClass(id: string): Promise<Class | undefined>;
+  getClassById(id: string): Promise<Class | undefined>;
   getClassesByLecturerId(lecturerId: string): Promise<Class[]>;
   createClass(classData: InsertClass): Promise<Class>;
   getAllClasses(): Promise<Class[]>;
+  getTotalClassesByClass(classId: string): Promise<number>;
 
   // Attendance management
   getAttendanceRecord(id: string): Promise<AttendanceRecord | undefined>;
@@ -55,7 +65,12 @@ export interface IStorage {
     date: Date
   ): Promise<AttendanceRecord[]>;
   getAttendanceByStudent(studentId: string): Promise<AttendanceRecord[]>;
+  getAttendanceByStudentAndClass(
+    studentId: string,
+    classId: string
+  ): Promise<AttendanceRecord[]>;
   getAttendanceByClass(classId: string): Promise<AttendanceRecord[]>;
+  getAllAttendanceRecords(): Promise<AttendanceRecord[]>;
 
   // Hardware management
   getHardwareDevice(id: string): Promise<HardwareDevice | undefined>;
@@ -150,6 +165,10 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
       (user) => user.username === username
@@ -196,13 +215,44 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getStudentById(id: string): Promise<Student | undefined> {
+    return this.students.get(id);
+  }
+
+  async getStudentsByClass(classId: string): Promise<Student[]> {
+    // For demo purposes, return all students
+    // In a real implementation, this would filter by class enrollment
+    return Array.from(this.students.values()).filter(
+      (student) => student.active
+    );
+  }
+
   async createStudent(insertStudent: InsertStudent): Promise<Student> {
     const id = randomUUID();
-    const student: Student = { ...insertStudent, id };
+    const student: Student = {
+      ...insertStudent,
+      id,
+      rfidCard: insertStudent.rfidCard ?? null,
+      faceEmbedding: insertStudent.faceEmbedding ?? null,
+      active: insertStudent.active ?? true,
+      nic: insertStudent.nic ?? null,
+      mobileNumber: insertStudent.mobileNumber ?? null,
+      gender: insertStudent.gender ?? null,
+      dateOfBirth: insertStudent.dateOfBirth ?? null,
+      address: insertStudent.address ?? null,
+      guardianName: insertStudent.guardianName ?? null,
+      guardianContact: insertStudent.guardianContact ?? null,
+      emergencyContact: insertStudent.emergencyContact ?? null,
+      batch: insertStudent.batch ?? null,
+      semester: insertStudent.semester ?? null,
+      gpa: insertStudent.gpa ?? null,
+      faceRegistrationStatus: insertStudent.faceRegistrationStatus ?? "pending",
+      faceRegistrationDate: insertStudent.faceRegistrationDate ?? null,
+      createdAt: new Date(),
+    };
     this.students.set(id, student);
     return student;
   }
-
   async updateStudent(
     id: string,
     updateData: Partial<Student>
@@ -213,6 +263,52 @@ export class MemStorage implements IStorage {
     const updatedStudent = { ...student, ...updateData };
     this.students.set(id, updatedStudent);
     return updatedStudent;
+  }
+
+  async deleteStudent(id: string): Promise<boolean> {
+    return this.students.delete(id);
+  }
+
+  async getStudentByRfidCard(rfidCard: string): Promise<Student | undefined> {
+    return Array.from(this.students.values()).find(
+      (student) => student.rfidCard === rfidCard
+    );
+  }
+
+  async getStudentByNic(nic: string): Promise<Student | undefined> {
+    return Array.from(this.students.values()).find(
+      (student) => student.nic === nic
+    );
+  }
+
+  async getAvailableRfidCards(): Promise<string[]> {
+    const allStudents = await this.getAllStudents();
+    const assignedCards = allStudents
+      .map((s) => s.rfidCard)
+      .filter((card) => card !== null);
+
+    // Generate available cards
+    const availableCards = [];
+    for (let i = 1; i <= 100; i++) {
+      const cardId = `RFID${i.toString().padStart(6, "0")}`;
+      if (!assignedCards.includes(cardId)) {
+        availableCards.push(cardId);
+      }
+    }
+
+    return availableCards.slice(0, 20); // Return first 20 available
+  }
+
+  async generateNewRfidCard(): Promise<string> {
+    const allStudents = await this.getAllStudents();
+    const assignedCards = allStudents
+      .map((s) => s.rfidCard)
+      .filter((card) => card && card.startsWith("RFID"))
+      .map((card) => parseInt(card.replace("RFID", "")))
+      .filter((num) => !isNaN(num));
+
+    const maxNumber = assignedCards.length > 0 ? Math.max(...assignedCards) : 0;
+    return `RFID${(maxNumber + 1).toString().padStart(6, "0")}`;
   }
 
   async getAllStudents(): Promise<Student[]> {
@@ -263,6 +359,16 @@ export class MemStorage implements IStorage {
     return Array.from(this.classes.values());
   }
 
+  async getClassById(id: string): Promise<Class | undefined> {
+    return this.classes.get(id);
+  }
+
+  async getTotalClassesByClass(classId: string): Promise<number> {
+    // For demo purposes, return a fixed number
+    // In a real implementation, this would count total scheduled classes
+    return 30; // Assuming 30 classes per semester
+  }
+
   // Attendance methods
   async getAttendanceRecord(id: string): Promise<AttendanceRecord | undefined> {
     return this.attendanceRecords.get(id);
@@ -275,6 +381,8 @@ export class MemStorage implements IStorage {
     const record: AttendanceRecord = {
       ...insertRecord,
       id,
+      hardwareId: insertRecord.hardwareId ?? null,
+      confidence: insertRecord.confidence ?? null,
       createdAt: new Date(),
     };
     this.attendanceRecords.set(id, record);
@@ -310,10 +418,23 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getAttendanceByStudentAndClass(
+    studentId: string,
+    classId: string
+  ): Promise<AttendanceRecord[]> {
+    return Array.from(this.attendanceRecords.values()).filter(
+      (record) => record.studentId === studentId && record.classId === classId
+    );
+  }
+
   async getAttendanceByClass(classId: string): Promise<AttendanceRecord[]> {
     return Array.from(this.attendanceRecords.values()).filter(
       (record) => record.classId === classId
     );
+  }
+
+  async getAllAttendanceRecords(): Promise<AttendanceRecord[]> {
+    return Array.from(this.attendanceRecords.values());
   }
 
   // Hardware methods
@@ -517,6 +638,78 @@ async function initializeDemoData() {
       });
     }
 
+    // Create additional demo students
+    const demoStudents = [
+      {
+        username: "student2",
+        password: "student123",
+        email: "alice.johnson@university.edu",
+        fullName: "Alice Johnson",
+        role: "student",
+        department: "Computer Science",
+        studentId: "STU002",
+        enrollmentYear: 2023,
+        rfidCard: "RFID002",
+      },
+      {
+        username: "student3",
+        password: "student123",
+        email: "bob.wilson@university.edu",
+        fullName: "Bob Wilson",
+        role: "student",
+        department: "Information Technology",
+        studentId: "STU003",
+        enrollmentYear: 2024,
+        rfidCard: null,
+      },
+      {
+        username: "student4",
+        password: "student123",
+        email: "carol.davis@university.edu",
+        fullName: "Carol Davis",
+        role: "student",
+        department: "Data Science",
+        studentId: "STU004",
+        enrollmentYear: 2022,
+        rfidCard: "RFID004",
+      },
+      {
+        username: "student5",
+        password: "student123",
+        email: "david.brown@university.edu",
+        fullName: "David Brown",
+        role: "student",
+        department: "Software Engineering",
+        studentId: "STU005",
+        enrollmentYear: 2024,
+        rfidCard: "RFID005",
+      },
+    ];
+
+    for (const studentData of demoStudents) {
+      const existingUser = await storage.getUserByUsername(
+        studentData.username
+      );
+      if (!existingUser) {
+        const newUser = await storage.createUser({
+          username: studentData.username,
+          password: studentData.password,
+          email: studentData.email,
+          fullName: studentData.fullName,
+          role: studentData.role,
+          department: studentData.department,
+        });
+
+        await storage.createStudent({
+          userId: newUser.id,
+          studentId: studentData.studentId,
+          enrollmentYear: studentData.enrollmentYear,
+          rfidCard: studentData.rfidCard,
+          active: true,
+        });
+      }
+    }
+
     // Create demo class if it doesn't exist
     const existingClasses = await storage.getClassesByLecturerId(
       lecturerUser.id
@@ -536,6 +729,47 @@ async function initializeDemoData() {
           time: "09:00-10:30",
         },
       });
+
+      // Create some demo attendance records
+      const allStudents = await storage.getAllStudents();
+      const today = new Date();
+      const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+      const twoDaysAgo = new Date(today.getTime() - 48 * 60 * 60 * 1000);
+
+      for (const student of allStudents) {
+        // Today's attendance
+        await storage.createAttendanceRecord({
+          studentId: student.id,
+          classId: demoClass.id,
+          attendanceDate: today,
+          method: "face_recognition",
+          status: "present",
+          hardwareId: "ESP32_CAM_01",
+          confidence: "0.95",
+        });
+
+        // Yesterday's attendance
+        await storage.createAttendanceRecord({
+          studentId: student.id,
+          classId: demoClass.id,
+          attendanceDate: yesterday,
+          method: "rfid",
+          status: Math.random() > 0.2 ? "present" : "absent",
+          hardwareId: "RFID_READER_01",
+          confidence: null,
+        });
+
+        // Two days ago attendance
+        await storage.createAttendanceRecord({
+          studentId: student.id,
+          classId: demoClass.id,
+          attendanceDate: twoDaysAgo,
+          method: "face_recognition",
+          status: Math.random() > 0.15 ? "present" : "late",
+          hardwareId: "ESP32_CAM_01",
+          confidence: "0.88",
+        });
+      }
     }
 
     console.log("Demo data initialized successfully");

@@ -1,10 +1,21 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, decimal, boolean, jsonb } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  varchar,
+  integer,
+  timestamp,
+  decimal,
+  boolean,
+  jsonb,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
@@ -15,28 +26,61 @@ export const users = pgTable("users", {
 });
 
 export const students = pgTable("students", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id),
   studentId: text("student_id").notNull().unique(),
   rfidCard: text("rfid_card"),
   faceEmbedding: jsonb("face_embedding"), // Face recognition data
   enrollmentYear: integer("enrollment_year").notNull(),
+
+  // Personal Information
+  nic: text("nic").unique(), // National Identity Card
+  mobileNumber: text("mobile_number"),
+  gender: text("gender"), // 'male', 'female', 'other'
+  dateOfBirth: timestamp("date_of_birth"),
+  address: text("address"),
+  guardianName: text("guardian_name"),
+  guardianContact: text("guardian_contact"),
+  emergencyContact: text("emergency_contact"),
+
+  // Academic Information
+  batch: text("batch"), // e.g., "2024A", "2024B"
+  semester: text("semester"), // Current semester
+  gpa: decimal("gpa", { precision: 3, scale: 2 }), // Current GPA
+
+  // Face Recognition Status
+  faceRegistrationStatus: text("face_registration_status").default("pending"), // 'pending', 'completed', 'failed'
+  faceRegistrationDate: timestamp("face_registration_date"),
+
   active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const lecturers = pgTable("lecturers", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id),
   lecturerId: text("lecturer_id").notNull().unique(),
   specialization: text("specialization"),
   active: boolean("active").default(true),
 });
 
 export const classes = pgTable("classes", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   classCode: text("class_code").notNull().unique(),
   className: text("class_name").notNull(),
-  lecturerId: varchar("lecturer_id").notNull().references(() => lecturers.id),
+  lecturerId: varchar("lecturer_id")
+    .notNull()
+    .references(() => lecturers.id),
   room: text("room").notNull(),
   schedule: jsonb("schedule"), // Day, time, duration
   semester: text("semester").notNull(),
@@ -46,16 +90,28 @@ export const classes = pgTable("classes", {
 });
 
 export const classEnrollments = pgTable("class_enrollments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  classId: varchar("class_id").notNull().references(() => classes.id),
-  studentId: varchar("student_id").notNull().references(() => students.id),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  classId: varchar("class_id")
+    .notNull()
+    .references(() => classes.id),
+  studentId: varchar("student_id")
+    .notNull()
+    .references(() => students.id),
   enrolledAt: timestamp("enrolled_at").defaultNow(),
 });
 
 export const attendanceRecords = pgTable("attendance_records", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  studentId: varchar("student_id").notNull().references(() => students.id),
-  classId: varchar("class_id").notNull().references(() => classes.id),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id")
+    .notNull()
+    .references(() => students.id),
+  classId: varchar("class_id")
+    .notNull()
+    .references(() => classes.id),
   attendanceDate: timestamp("attendance_date").notNull(),
   method: text("method").notNull(), // 'face_recognition', 'rfid'
   status: text("status").notNull(), // 'present', 'absent', 'late'
@@ -65,7 +121,9 @@ export const attendanceRecords = pgTable("attendance_records", {
 });
 
 export const hardwareDevices = pgTable("hardware_devices", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   deviceId: text("device_id").notNull().unique(),
   deviceType: text("device_type").notNull(), // 'esp32_cam', 'rfid_reader'
   location: text("location").notNull(),
@@ -75,10 +133,19 @@ export const hardwareDevices = pgTable("hardware_devices", {
 });
 
 export const examEligibility = pgTable("exam_eligibility", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  studentId: varchar("student_id").notNull().references(() => students.id),
-  classId: varchar("class_id").notNull().references(() => classes.id),
-  attendancePercentage: decimal("attendance_percentage", { precision: 5, scale: 2 }).notNull(),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  studentId: varchar("student_id")
+    .notNull()
+    .references(() => students.id),
+  classId: varchar("class_id")
+    .notNull()
+    .references(() => classes.id),
+  attendancePercentage: decimal("attendance_percentage", {
+    precision: 5,
+    scale: 2,
+  }).notNull(),
   totalClasses: integer("total_classes").notNull(),
   attendedClasses: integer("attended_classes").notNull(),
   isEligible: boolean("is_eligible").notNull(),
@@ -103,12 +170,16 @@ export const insertClassSchema = createInsertSchema(classes).omit({
   id: true,
 });
 
-export const insertAttendanceRecordSchema = createInsertSchema(attendanceRecords).omit({
+export const insertAttendanceRecordSchema = createInsertSchema(
+  attendanceRecords
+).omit({
   id: true,
   createdAt: true,
 });
 
-export const insertHardwareDeviceSchema = createInsertSchema(hardwareDevices).omit({
+export const insertHardwareDeviceSchema = createInsertSchema(
+  hardwareDevices
+).omit({
   id: true,
 });
 
@@ -125,5 +196,7 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertStudent = z.infer<typeof insertStudentSchema>;
 export type InsertLecturer = z.infer<typeof insertLecturerSchema>;
 export type InsertClass = z.infer<typeof insertClassSchema>;
-export type InsertAttendanceRecord = z.infer<typeof insertAttendanceRecordSchema>;
+export type InsertAttendanceRecord = z.infer<
+  typeof insertAttendanceRecordSchema
+>;
 export type InsertHardwareDevice = z.infer<typeof insertHardwareDeviceSchema>;
