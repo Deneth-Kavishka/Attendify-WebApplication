@@ -34,7 +34,7 @@ export default function Login() {
       if (result.success) {
         toast({
           title: "Login successful",
-          description: "Welcome to Smart Attendance Management System"
+          description: "Welcome to Attendify"
         });
         
         // Redirect based on user role will be handled by the auth context
@@ -94,7 +94,7 @@ export default function Login() {
               Attendify
             </h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium tracking-wide">
-              Smart Attendance Management
+              Your Presence. Our Precision
             </p>
           </div>
           

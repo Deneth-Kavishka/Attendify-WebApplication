@@ -54,7 +54,7 @@ unsigned long successfulScans = 0;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Smart Attendance RFID System Starting...");
+  Serial.println("Attendify RFID System Starting...");
   
   // Initialize EEPROM
   EEPROM.begin(512);
@@ -341,7 +341,7 @@ void reconnectWiFi() {
 void displayWelcome() {
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Smart Attendance");
+  lcd.print("Attendify");
   lcd.setCursor(0, 1);
   lcd.print("System Starting");
   delay(2000);

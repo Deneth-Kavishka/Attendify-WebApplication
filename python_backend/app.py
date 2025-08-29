@@ -246,7 +246,7 @@ def hardware_heartbeat():
         return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    print("Starting Smart Attendance Face Recognition Service...")
+    print("Starting Attendify Face Recognition Service...")
     print("Available endpoints:")
     print("- POST /api/face/enroll - Enroll a student's face")
     print("- POST /api/face/recognize - Recognize a face for attendance")

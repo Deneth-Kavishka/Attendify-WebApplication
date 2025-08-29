@@ -1,4 +1,4 @@
-# Smart Attendance Hardware Setup Guide
+# AttendifyHardware Setup Guide
 
 ## Required Components
 

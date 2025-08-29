@@ -147,9 +147,10 @@ export default function Sidebar({
           </div>
           <div>
             <h1 className="text-lg font-semibold text-gray-900">
-              Smart Attendance
+              Attendify
             </h1>
-            <p className="text-xs text-gray-500">Management System</p>
+            <p className="text-xs text-gray-500">Your Presence</p>
+            <p className="text-xs text-gray-500">Our Precision</p>
           </div>
         </div>
       </div>
