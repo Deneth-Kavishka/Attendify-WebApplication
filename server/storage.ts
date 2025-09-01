@@ -15,6 +15,9 @@ import {
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 
+// Import PostgreSQL storage class
+import { PostgreSQLStorage } from "./postgres-storage";
+
 export interface IStorage {
   // User management
   getUser(id: string): Promise<User | undefined>;
@@ -560,6 +563,25 @@ export class MemStorage implements IStorage {
 }
 
 export const storage = new MemStorage();
+
+// Use PostgreSQL storage when available, fallback to MemStorage
+export const dbStorage = (() => {
+  if (process.env.USE_POSTGRES === "true") {
+    try {
+      console.log("🔌 Attempting to connect to PostgreSQL...");
+      return new PostgreSQLStorage();
+    } catch (error: any) {
+      console.warn(
+        "⚠️ PostgreSQL not available, using in-memory storage for development"
+      );
+      console.warn("📝 To use PostgreSQL: Follow POSTGRESQL_SETUP.md");
+      console.warn("📝 Error:", error?.message || error);
+      return new MemStorage();
+    }
+  }
+  console.log("📝 USE_POSTGRES not set to true, using in-memory storage");
+  return new MemStorage();
+})();
 
 // Initialize demo data
 async function initializeDemoData() {

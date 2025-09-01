@@ -58,116 +58,22 @@ import {
 } from "@/components/ui/popover";
 import { format } from "date-fns";
 
-// Real-time attendance monitoring component with hardware simulation
+// Real-time attendance monitoring component
 function RealTimeAttendanceMonitor() {
   const [liveAttendance, setLiveAttendance] = useState([]);
-  const [hardwareSimulation, setHardwareSimulation] = useState(true);
 
   // Fetch recent attendance records
   const { data: recentAttendance = [], refetch } = useQuery({
     queryKey: ["/api/attendance/recent"],
-    refetchInterval: 3000, // Refresh every 3 seconds for more real-time feel
-  });
-
-  // Fetch students for realistic simulation
-  const { data: allStudents = [] } = useQuery({
-    queryKey: ["/api/students"],
-  });
-
-  // Fetch classes for realistic simulation
-  const { data: allClasses = [] } = useQuery({
-    queryKey: ["/api/classes"],
+    refetchInterval: 5000, // Refresh every 5 seconds
   });
 
   useEffect(() => {
-    // Update live attendance with real data
+    // Update live attendance with real data from database
     if (recentAttendance.length > 0) {
       setLiveAttendance(recentAttendance.slice(0, 15)); // Show last 15 records
     }
   }, [recentAttendance]);
-
-  useEffect(() => {
-    // Real hardware simulation with actual student data
-    if (hardwareSimulation && allStudents.length > 0 && allClasses.length > 0) {
-      const interval = setInterval(() => {
-        // Simulate realistic hardware detection events
-        const randomStudent =
-          allStudents[Math.floor(Math.random() * allStudents.length)];
-        const randomClass =
-          allClasses[Math.floor(Math.random() * allClasses.length)];
-        const detectionMethods = ["face_recognition", "rfid"];
-        const method =
-          detectionMethods[Math.floor(Math.random() * detectionMethods.length)];
-
-        // Simulate realistic detection scenarios
-        const scenarios = [
-          { status: "present", confidence: 0.92 + Math.random() * 0.08 }, // High confidence
-          { status: "present", confidence: 0.85 + Math.random() * 0.07 }, // Good confidence
-          { status: "late", confidence: 0.78 + Math.random() * 0.12 }, // Acceptable confidence
-        ];
-
-        const scenario =
-          scenarios[Math.floor(Math.random() * scenarios.length)];
-
-        const newEntry = {
-          id: `sim_${Date.now()}`,
-          timestamp: new Date(),
-          attendanceDate: new Date(),
-          student: {
-            id: randomStudent.id,
-            studentId: randomStudent.studentId,
-            user: {
-              fullName: randomStudent.user?.fullName || "Unknown Student",
-            },
-          },
-          class: {
-            id: randomClass.id,
-            className: randomClass.className,
-            classCode: randomClass.classCode,
-          },
-          method: method,
-          hardwareId:
-            method === "face_recognition" ? "ESP32_CAM_01" : "RFID_READER_01",
-          status: scenario.status,
-          confidence: scenario.confidence,
-          isSimulated: true,
-        };
-
-        // Automatically create attendance record in database
-        createAttendanceFromHardware(newEntry);
-
-        setLiveAttendance((prev) => [newEntry, ...prev.slice(0, 14)]);
-      }, 8000 + Math.random() * 7000); // Random interval 8-15 seconds for realistic timing
-
-      return () => clearInterval(interval);
-    }
-  }, [hardwareSimulation, allStudents, allClasses]);
-
-  // Function to create actual attendance record from hardware simulation
-  const createAttendanceFromHardware = async (entry) => {
-    try {
-      await fetch("/api/attendance", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          studentId: entry.student.id,
-          classId: entry.class.id,
-          attendanceDate: entry.timestamp,
-          method: entry.method,
-          status: entry.status,
-          hardwareId: entry.hardwareId,
-          confidence: entry.confidence?.toString(),
-        }),
-      });
-      // Trigger refresh to show the new record
-      setTimeout(() => refetch(), 1000);
-    } catch (error) {
-      console.error("Failed to create attendance record:", error);
-    }
-  };
 
   const getMethodIcon = (method) => {
     switch (method) {
@@ -215,27 +121,12 @@ function RealTimeAttendanceMonitor() {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center">
             <div className="relative mr-2">
-              <i className="fas fa-broadcast-tower text-green-600"></i>
+              <i className="fas fa-list text-blue-600"></i>
               <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
             </div>
-            Real-Time Attendance Monitor
+            Recent Attendance Records
           </div>
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setHardwareSimulation(!hardwareSimulation)}
-              className={`text-xs px-2 py-1 rounded-lg transition-colors ${
-                hardwareSimulation
-                  ? "bg-green-100 text-green-700 hover:bg-green-200"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              <i
-                className={`fas ${
-                  hardwareSimulation ? "fa-pause" : "fa-play"
-                } mr-1`}
-              ></i>
-              {hardwareSimulation ? "Live Mode" : "Paused"}
-            </button>
             <button
               onClick={() => refetch()}
               className="text-sm px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
@@ -246,51 +137,38 @@ function RealTimeAttendanceMonitor() {
           </div>
         </CardTitle>
         <CardDescription>
-          {hardwareSimulation
-            ? `🔴 LIVE: Hardware devices detecting students in real-time (${liveAttendance.length} recent detections)`
-            : `Showing recent attendance records (${recentAttendance.length} total)`}
+          Showing recent attendance records from database (
+          {liveAttendance.length} records)
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {liveAttendance.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              <i className="fas fa-satellite-dish text-2xl mb-2 animate-pulse"></i>
-              <p>Waiting for hardware detection...</p>
+              <i className="fas fa-clipboard-list text-2xl mb-2"></i>
+              <p>No attendance records found</p>
               <p className="text-sm mt-2">
-                ESP32-CAM and RFID devices are scanning for students
+                Records will appear here when students are detected by hardware
               </p>
             </div>
           ) : (
             liveAttendance.map((entry) => (
               <div
                 key={entry.id}
-                className={`flex items-center justify-between p-3 rounded-lg border-l-4 transition-all duration-500 ${
-                  entry.isSimulated
-                    ? "bg-gradient-to-r from-blue-50 to-green-50 border-blue-500 shadow-md"
-                    : "bg-gray-50 border-gray-400"
-                }`}
+                className="flex items-center justify-between p-3 rounded-lg border bg-white shadow-sm"
               >
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <i className={getMethodIcon(entry.method)}></i>
-                    {entry.isSimulated && (
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-                    )}
                   </div>
                   <div>
                     <p className="font-medium flex items-center">
                       {entry.student?.user?.fullName ||
                         `Student ${entry.studentId || "Unknown"}`}
-                      {entry.isSimulated && (
-                        <span className="ml-2 px-1 py-0.5 text-xs bg-red-100 text-red-600 rounded">
-                          LIVE
-                        </span>
-                      )}
                     </p>
                     <p className="text-sm text-gray-500">
                       {entry.student?.studentId || entry.studentId} •{" "}
-                      {entry.class?.className || "Demo Class"}
+                      {entry.class?.className || "Unknown Class"}
                     </p>
                     <p className="text-xs text-gray-400 flex items-center">
                       <i
@@ -320,90 +198,31 @@ function RealTimeAttendanceMonitor() {
                       {entry.status.toUpperCase()}
                     </span>
                   </div>
-                  <p
-                    className={`text-xs font-medium ${getConfidenceColor(
-                      entry.confidence
-                    )}`}
-                  >
-                    {formatConfidence(entry.confidence)} confidence
-                  </p>
+                  {entry.confidence && (
+                    <p
+                      className={`text-xs font-medium ${getConfidenceColor(
+                        entry.confidence
+                      )}`}
+                    >
+                      {formatConfidence(entry.confidence)} confidence
+                    </p>
+                  )}
                 </div>
               </div>
             ))
           )}
         </div>
-
-        {hardwareSimulation && (
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center text-sm text-blue-700">
-              <i className="fas fa-info-circle mr-2"></i>
-              <span className="font-medium">
-                Live Hardware Simulation Active
-              </span>
-            </div>
-            <p className="text-xs text-blue-600 mt-1">
-              ESP32-CAM and RFID devices are actively scanning for students.
-              Real attendance records are being created automatically.
-            </p>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
 }
 
-// Hardware device status component with real device simulation
+// Hardware device status component
 function HardwareDeviceStatus() {
-  const [deviceStates, setDeviceStates] = useState({
-    esp32_cam_01: { status: "online", lastSeen: new Date(), scans: 0 },
-    rfid_reader_01: { status: "online", lastSeen: new Date(), scans: 0 },
-    esp32_cam_02: {
-      status: "offline",
-      lastSeen: new Date(Date.now() - 300000),
-      scans: 0,
-    },
-  });
-
-  // Simulate real device status updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDeviceStates((prev) => {
-        const newStates = { ...prev };
-
-        // Simulate device activity
-        Object.keys(newStates).forEach((deviceId) => {
-          const device = newStates[deviceId];
-
-          if (device.status === "online") {
-            // Random chance to update last seen and increment scans
-            if (Math.random() > 0.7) {
-              device.lastSeen = new Date();
-              device.scans += Math.floor(Math.random() * 3);
-            }
-
-            // Small chance to go offline
-            if (Math.random() > 0.95) {
-              device.status = "offline";
-            }
-          } else {
-            // Chance to come back online
-            if (Math.random() > 0.8) {
-              device.status = "online";
-              device.lastSeen = new Date();
-            }
-          }
-        });
-
-        return newStates;
-      });
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
+  // Fetch hardware devices from API
   const { data: devices = [] } = useQuery({
     queryKey: ["/api/hardware"],
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 10000, // Refresh every 10 seconds
   });
 
   const getDeviceIcon = (deviceType) => {

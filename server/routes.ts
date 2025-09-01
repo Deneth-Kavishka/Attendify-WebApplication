@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
-import { storage } from "./storage";
+import { dbStorage as storage } from "./storage";
+import hardwareRoutes from "./hardware-routes";
 import {
   insertUserSchema,
   insertStudentSchema,
@@ -2892,6 +2893,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch activity logs" });
     }
   });
+
+  // Hardware IoT routes for ESP32-CAM and RFID devices
+  app.use("/api/hardware", hardwareRoutes);
 
   return httpServer;
 }
