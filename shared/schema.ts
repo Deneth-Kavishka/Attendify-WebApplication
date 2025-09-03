@@ -130,6 +130,28 @@ export const hardwareDevices = pgTable("hardware_devices", {
   status: text("status").notNull(), // 'online', 'offline', 'maintenance'
   lastHeartbeat: timestamp("last_heartbeat"),
   configuration: jsonb("configuration"),
+
+  // Additional ESP32 CAM specific fields
+  ipAddress: text("ip_address"),
+  macAddress: text("mac_address"),
+  description: text("description"),
+  firmwareVersion: text("firmware_version"),
+
+  // Real-time monitoring data
+  batteryLevel: integer("battery_level"), // 0-100 percentage
+  signalStrength: integer("signal_strength"), // WiFi RSSI in dBm
+  freeMemory: integer("free_memory"), // Available RAM in bytes
+
+  // Device health metrics
+  uptimeHours: decimal("uptime_hours", { precision: 10, scale: 2 }),
+  totalScans: integer("total_scans").default(0),
+  successfulScans: integer("successful_scans").default(0),
+  lastErrorMessage: text("last_error_message"),
+  lastErrorTime: timestamp("last_error_time"),
+
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const examEligibility = pgTable("exam_eligibility", {

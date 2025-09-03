@@ -568,7 +568,7 @@ export const storage = new MemStorage();
 export const dbStorage = (() => {
   if (process.env.USE_POSTGRES === "true") {
     try {
-      console.log("🔌 Attempting to connect to PostgreSQL...");
+      console.log("Attempting to connect to PostgreSQL...");
       return new PostgreSQLStorage();
     } catch (error: any) {
       console.warn(

@@ -1,0 +1,123 @@
+# ===================== CORE FLASK FRAMEWORK =====================
+Flask==3.0.0
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.6
+
+# ===================== WEB SERVER & WSGI =====================
+Werkzeug==3.0.1
+eventlet==0.33.3
+gunicorn==21.2.0
+
+# ===================== WEBSOCKET SUPPORT =====================
+python-socketio==5.9.0
+python-engineio==4.7.1
+
+# ===================== IMAGE PROCESSING =====================
+Pillow==10.0.1
+opencv-python==4.8.1.78
+numpy==1.24.3
+
+# ===================== FACE RECOGNITION =====================
+face-recognition==1.3.0
+dlib==19.24.2
+
+# ===================== COMPUTER VISION SUPPORT =====================
+opencv-contrib-python==4.8.1.78
+scikit-image==0.21.0
+
+# ===================== DATA PROCESSING =====================
+pandas==2.1.1
+scipy==1.11.3
+
+# ===================== ENCODING & SECURITY =====================
+cryptography==41.0.4
+bcrypt==4.0.1
+PyJWT==2.8.0
+
+# ===================== UTILITIES =====================
+python-dotenv==1.0.0
+requests==2.31.0
+urllib3==2.0.4
+
+# ===================== LOGGING & MONITORING =====================
+loguru==0.7.2
+psutil==5.9.5
+
+# ===================== DATABASE (OPTIONAL) =====================
+SQLAlchemy==2.0.21
+sqlite3  # Built-in with Python
+
+# ===================== DEVELOPMENT TOOLS =====================
+pytest==7.4.2
+black==23.7.0
+flake8==6.0.0
+
+# ===================== ASYNC SUPPORT =====================
+asyncio  # Built-in with Python
+threading  # Built-in with Python
+
+# ===================== FILE HANDLING =====================
+pathlib  # Built-in with Python
+json  # Built-in with Python
+base64  # Built-in with Python
+uuid  # Built-in with Python
+
+# ===================== DATE & TIME =====================
+datetime  # Built-in with Python
+time  # Built-in with Python
+
+# ===================== SYSTEM UTILITIES =====================
+os  # Built-in with Python
+sys  # Built-in with Python
+io  # Built-in with Python
+hashlib  # Built-in with Python
+
+# ===================== ADDITIONAL DEPENDENCIES =====================
+# For production deployment
+redis==5.0.0  # For session storage (optional)
+celery==5.3.2  # For background tasks (optional)
+
+# For enhanced image processing
+imageio==2.31.3
+matplotlib==3.7.2  # For debugging visualizations
+
+# For better error handling
+sentry-sdk[flask]==1.32.0  # Error tracking (optional)
+
+# ===================== INSTALLATION NOTES =====================
+#
+# 1. BASIC INSTALLATION (Minimum Required):
+#    pip install Flask Flask-CORS Flask-SocketIO Pillow opencv-python face-recognition
+#
+# 2. FULL INSTALLATION (All Features):
+#    pip install -r requirements_final.txt
+#
+# 3. WINDOWS SPECIFIC NOTES:
+#    - Install Visual C++ Build Tools if dlib installation fails
+#    - Use Python 3.8-3.11 for best compatibility
+#    - Consider using conda for easier dependency management:
+#      conda install -c conda-forge dlib face_recognition opencv
+#
+# 4. LINUX/MAC SPECIFIC NOTES:
+#    - Install cmake and boost libraries:
+#      sudo apt-get install cmake libboost-all-dev  # Ubuntu/Debian
+#      brew install cmake boost  # macOS
+#
+# 5. DOCKER INSTALLATION (Alternative):
+#    Use the provided Dockerfile for containerized deployment
+#
+# 6. PERFORMANCE OPTIMIZATION:
+#    - Use GPU acceleration with opencv-python-headless for better performance
+#    - Install Intel Math Kernel Library (MKL) for NumPy acceleration
+#
+# 7. TROUBLESHOOTING:
+#    - If face_recognition fails, try: pip install cmake dlib face_recognition
+#    - For M1 Macs: use conda install -c conda-forge face_recognition
+#    - For older systems: use face_recognition==1.2.3
+#
+# ===================== VERSION COMPATIBILITY =====================
+# Tested with:
+# - Python 3.8, 3.9, 3.10, 3.11
+# - Windows 10/11, Ubuntu 20.04+, macOS 11+
+# - ESP32-CAM with Arduino IDE 2.0+
+# - Node.js 18+ for frontend integration

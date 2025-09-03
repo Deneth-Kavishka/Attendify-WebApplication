@@ -173,7 +173,7 @@ export default function StudentPortal() {
                   Student Portal
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Welcome back, {user?.fullName}
+                  Welcome back, {user?.fullName || "Student"}
                 </p>
               </div>
               <div className="flex items-center space-x-4">

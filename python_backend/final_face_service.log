@@ -1,0 +1,75 @@
+2025-09-03 16:29:36,332 - __main__ - INFO - 📝 Initialized demo student data
+2025-09-03 16:29:36,332 - __main__ - INFO - 🚀 ESP32-CAM Face Recognition Service v3.0.0 initialized
+2025-09-03 16:29:36,332 - __main__ - INFO - 📊 Loaded 3 students
+2025-09-03 16:29:36,333 - __main__ - INFO - 🔍 Face recognition: Demo Mode
+2025-09-03 16:29:36,336 - __main__ - INFO - ============================================================
+2025-09-03 16:29:36,336 - __main__ - INFO - 🚀 Starting ESP32-CAM Face Recognition Service v3.0.0
+2025-09-03 16:29:36,337 - __main__ - INFO - ============================================================
+2025-09-03 16:29:36,337 - __main__ - INFO - 🔧 Configuration:
+2025-09-03 16:29:36,337 - __main__ - INFO -    - Port: 8000
+2025-09-03 16:29:36,338 - __main__ - INFO -    - Face Recognition: Demo Mode
+2025-09-03 16:29:36,338 - __main__ - INFO -    - Debug Mode: False
+2025-09-03 16:29:36,338 - __main__ - INFO -    - Max Concurrent Requests: 5
+2025-09-03 16:29:36,338 - __main__ - INFO - 📊 Loaded Data:
+2025-09-03 16:29:36,338 - __main__ - INFO -    - Students: 3
+2025-09-03 16:29:36,339 - __main__ - INFO -    - Attendance Records: 0
+2025-09-03 16:29:36,339 - __main__ - INFO - 🌐 Access URLs:
+2025-09-03 16:29:36,339 - __main__ - INFO -    - Health Check: http://localhost:8000/health
+2025-09-03 16:29:36,340 - __main__ - INFO -    - API Base: http://localhost:8000/api/
+2025-09-03 16:29:36,340 - __main__ - INFO -    - WebSocket: ws://localhost:8000
+2025-09-03 16:29:36,340 - __main__ - INFO - ============================================================
+2025-09-03 16:29:36,389 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8000
+ * Running on http://192.168.8.110:8000
+2025-09-03 16:29:36,389 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-09-03 16:33:55,410 - __main__ - INFO - 📝 Initialized demo student data
+2025-09-03 16:33:55,411 - __main__ - INFO - 🚀 ESP32-CAM Face Recognition Service v3.0.0 initialized
+2025-09-03 16:33:55,412 - __main__ - INFO - 📊 Loaded 3 students
+2025-09-03 16:33:55,412 - __main__ - INFO - 🔍 Face recognition: Demo Mode
+2025-09-03 16:33:55,424 - __main__ - INFO - ============================================================
+2025-09-03 16:33:55,425 - __main__ - INFO - 🚀 Starting ESP32-CAM Face Recognition Service v3.0.0
+2025-09-03 16:33:55,426 - __main__ - INFO - ============================================================
+2025-09-03 16:33:55,427 - __main__ - INFO - 🔧 Configuration:
+2025-09-03 16:33:55,427 - __main__ - INFO -    - Port: 8000
+2025-09-03 16:33:55,428 - __main__ - INFO -    - Face Recognition: Demo Mode
+2025-09-03 16:33:55,429 - __main__ - INFO -    - Debug Mode: False
+2025-09-03 16:33:55,429 - __main__ - INFO -    - Max Concurrent Requests: 5
+2025-09-03 16:33:55,430 - __main__ - INFO - 📊 Loaded Data:
+2025-09-03 16:33:55,431 - __main__ - INFO -    - Students: 3
+2025-09-03 16:33:55,431 - __main__ - INFO -    - Attendance Records: 0
+2025-09-03 16:33:55,432 - __main__ - INFO - 🌐 Access URLs:
+2025-09-03 16:33:55,433 - __main__ - INFO -    - Health Check: http://localhost:8000/health
+2025-09-03 16:33:55,433 - __main__ - INFO -    - API Base: http://localhost:8000/api/
+2025-09-03 16:33:55,434 - __main__ - INFO -    - WebSocket: ws://localhost:8000
+2025-09-03 16:33:55,435 - __main__ - INFO - ============================================================
+2025-09-03 16:33:55,531 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8000
+ * Running on http://192.168.8.110:8000
+2025-09-03 16:33:55,532 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-09-03 16:34:26,932 - __main__ - INFO - 📝 Initialized demo student data
+2025-09-03 16:34:26,933 - __main__ - INFO - 🚀 ESP32-CAM Face Recognition Service v3.0.0 initialized
+2025-09-03 16:34:26,933 - __main__ - INFO - 📊 Loaded 3 students
+2025-09-03 16:34:26,934 - __main__ - INFO - 🔍 Face recognition: Demo Mode
+2025-09-03 16:34:26,937 - __main__ - INFO - ============================================================
+2025-09-03 16:34:26,937 - __main__ - INFO - 🚀 Starting ESP32-CAM Face Recognition Service v3.0.0
+2025-09-03 16:34:26,938 - __main__ - INFO - ============================================================
+2025-09-03 16:34:26,938 - __main__ - INFO - 🔧 Configuration:
+2025-09-03 16:34:26,938 - __main__ - INFO -    - Port: 8000
+2025-09-03 16:34:26,938 - __main__ - INFO -    - Face Recognition: Demo Mode
+2025-09-03 16:34:26,939 - __main__ - INFO -    - Debug Mode: False
+2025-09-03 16:34:26,939 - __main__ - INFO -    - Max Concurrent Requests: 5
+2025-09-03 16:34:26,939 - __main__ - INFO - 📊 Loaded Data:
+2025-09-03 16:34:26,940 - __main__ - INFO -    - Students: 3
+2025-09-03 16:34:26,940 - __main__ - INFO -    - Attendance Records: 0
+2025-09-03 16:34:26,940 - __main__ - INFO - 🌐 Access URLs:
+2025-09-03 16:34:26,940 - __main__ - INFO -    - Health Check: http://localhost:8000/health
+2025-09-03 16:34:26,941 - __main__ - INFO -    - API Base: http://localhost:8000/api/
+2025-09-03 16:34:26,941 - __main__ - INFO -    - WebSocket: ws://localhost:8000
+2025-09-03 16:34:26,941 - __main__ - INFO - ============================================================
+2025-09-03 16:34:26,983 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8000
+ * Running on http://192.168.8.110:8000
+2025-09-03 16:34:26,984 - werkzeug - INFO - [33mPress CTRL+C to quit[0m

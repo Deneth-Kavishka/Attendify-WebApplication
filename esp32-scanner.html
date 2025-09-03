@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ESP32-CAM Network Scanner</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+      .container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .scan-button {
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 10px;
+        transition: all 0.3s;
+      }
+      .scan-button:hover {
+        background: #45a049;
+        transform: translateY(-2px);
+      }
+      .scan-button:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+      }
+      .device-card {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        padding: 20px;
+        margin: 10px 0;
+        border-left: 4px solid #4caf50;
+      }
+      .status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .status.online {
+        background: #4caf50;
+      }
+      .status.offline {
+        background: #f44336;
+      }
+      .status.scanning {
+        background: #ff9800;
+      }
+      .stream-preview {
+        max-width: 100%;
+        border-radius: 8px;
+        margin-top: 10px;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+      .log {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+        font-family: monospace;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .quick-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+      .quick-link {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        text-decoration: none;
+        color: white;
+        transition: all 0.3s;
+      }
+      .quick-link:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎥 ESP32-CAM Network Scanner</h1>
+        <p>Find and test ESP32-CAM devices on your network</p>
+      </div>
+
+      <div class="controls">
+        <button class="scan-button" onclick="quickScan()">
+          🔍 Quick Scan (Dialog 4G)
+        </button>
+        <button class="scan-button" onclick="fullScan()">
+          🌐 Full Network Scan
+        </button>
+        <button class="scan-button" onclick="clearResults()">
+          🗑️ Clear Results
+        </button>
+      </div>
+
+      <div id="results"></div>
+
+      <div class="quick-links">
+        <a href="http://localhost:3000" class="quick-link" target="_blank">
+          📱 Frontend App<br />
+          <small>Main Application</small>
+        </a>
+        <a
+          href="http://localhost:5000/api/hardware"
+          class="quick-link"
+          target="_blank"
+        >
+          🔧 API Status<br />
+          <small>Backend Hardware API</small>
+        </a>
+        <a href="http://localhost:8000" class="quick-link" target="_blank">
+          🐍 Python Service<br />
+          <small>Face Recognition Debug</small>
+        </a>
+      </div>
+
+      <div class="log" id="log">
+        <div><strong>🚀 ESP32-CAM Scanner Ready</strong></div>
+        <div>
+          Click "Quick Scan" to find ESP32 devices on Dialog 4G network
+          (192.168.8.x)
+        </div>
+        <div>Click "Full Scan" to check common router networks</div>
+        <div>---</div>
+      </div>
+    </div>
+
+    <script>
+      let scanInProgress = false;
+
+      function log(message) {
+        const logDiv = document.getElementById("log");
+        const timestamp = new Date().toLocaleTimeString();
+        logDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      function clearResults() {
+        document.getElementById("results").innerHTML = "";
+        document.getElementById("log").innerHTML = `
+                <div><strong>🚀 ESP32-CAM Scanner Ready</strong></div>
+                <div>Click "Quick Scan" to find ESP32 devices on Dialog 4G network (192.168.8.x)</div>
+                <div>Click "Full Scan" to check common router networks</div>
+                <div>---</div>
+            `;
+      }
+
+      async function quickScan() {
+        if (scanInProgress) return;
+        scanInProgress = true;
+
+        log("🔍 Starting Quick Scan on Dialog 4G network...");
+        updateButtons(true);
+
+        const baseIP = "192.168.8.";
+        await scanRange(baseIP, 100, 120);
+
+        scanInProgress = false;
+        updateButtons(false);
+        log("✅ Quick scan completed");
+      }
+
+      async function fullScan() {
+        if (scanInProgress) return;
+        scanInProgress = true;
+
+        log("🌐 Starting Full Network Scan...");
+        updateButtons(true);
+
+        const networks = ["192.168.1.", "192.168.0.", "192.168.8.", "10.0.0."];
+
+        for (const network of networks) {
+          log(`🔍 Scanning ${network}x network...`);
+          await scanRange(network, 100, 120);
+        }
+
+        scanInProgress = false;
+        updateButtons(false);
+        log("✅ Full scan completed");
+      }
+
+      async function scanRange(baseIP, start, end) {
+        const resultsDiv = document.getElementById("results");
+
+        for (let i = start; i <= end; i++) {
+          const ip = `${baseIP}${i}`;
+
+          try {
+            log(`📡 Checking ${ip}...`);
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+            const response = await fetch(`http://${ip}/`, {
+              method: "GET",
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+              const text = await response.text();
+
+              if (text.includes("ESP32-CAM") || text.includes("ESP32")) {
+                log(`✅ Found ESP32 device at ${ip}`);
+                await addDeviceCard(ip, text);
+              } else {
+                log(`ℹ️ Device at ${ip} (not ESP32)`);
+              }
+            }
+          } catch (error) {
+            // Ignore timeout/connection errors for cleaner log
+          }
+        }
+      }
+
+      async function addDeviceCard(ip, htmlContent) {
+        const resultsDiv = document.getElementById("results");
+
+        // Extract device info from HTML
+        let deviceName = "ESP32-CAM Device";
+        if (htmlContent.includes("ESP32-CAM Debug")) {
+          deviceName = "ESP32-CAM (Debug Mode)";
+        } else if (htmlContent.includes("ESP32-CAM")) {
+          deviceName = "ESP32-CAM";
+        }
+
+        const streamUrl = `http://${ip}/stream`;
+        const webInterface = `http://${ip}/`;
+
+        const deviceCard = document.createElement("div");
+        deviceCard.className = "device-card";
+        deviceCard.innerHTML = `
+                <div style="display: flex; justify-content: between; align-items: center;">
+                    <h3>📹 ${deviceName}</h3>
+                    <span class="status online">ONLINE</span>
+                </div>
+                <p><strong>IP Address:</strong> ${ip}</p>
+                <p><strong>Stream URL:</strong> <a href="${streamUrl}" target="_blank">${streamUrl}</a></p>
+                <p><strong>Web Interface:</strong> <a href="${webInterface}" target="_blank">${webInterface}</a></p>
+                
+                <div class="controls">
+                    <button class="scan-button" onclick="testStream('${ip}', this)">
+                        📺 Test Stream
+                    </button>
+                    <button class="scan-button" onclick="window.open('${webInterface}', '_blank')">
+                        🌐 Open Web UI
+                    </button>
+                    <button class="scan-button" onclick="copyToClipboard('${streamUrl}')">
+                        📋 Copy Stream URL
+                    </button>
+                </div>
+                
+                <div id="stream-${ip.replace(
+                  /\./g,
+                  "-"
+                )}" style="margin-top: 10px;"></div>
+            `;
+
+        resultsDiv.appendChild(deviceCard);
+      }
+
+      async function testStream(ip, button) {
+        const streamDiv = document.getElementById(
+          `stream-${ip.replace(/\./g, "-")}`
+        );
+        const originalText = button.textContent;
+
+        button.textContent = "⏳ Testing...";
+        button.disabled = true;
+
+        try {
+          const streamUrl = `http://${ip}/stream`;
+
+          // Create image element to test stream
+          const img = document.createElement("img");
+          img.className = "stream-preview";
+          img.style.maxWidth = "300px";
+          img.style.border = "2px solid #4CAF50";
+
+          img.onload = () => {
+            log(`✅ Stream working: ${streamUrl}`);
+            button.textContent = "✅ Stream OK";
+            button.style.background = "#4CAF50";
+          };
+
+          img.onerror = () => {
+            log(`❌ Stream failed: ${streamUrl}`);
+            button.textContent = "❌ Stream Failed";
+            button.style.background = "#f44336";
+            img.remove();
+          };
+
+          img.src = streamUrl;
+          streamDiv.innerHTML = "<p>📺 Testing stream...</p>";
+          streamDiv.appendChild(img);
+        } catch (error) {
+          log(`❌ Stream test error: ${error.message}`);
+          button.textContent = "❌ Error";
+          button.style.background = "#f44336";
+        }
+
+        button.disabled = false;
+
+        // Reset button after 3 seconds
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.style.background = "#4CAF50";
+        }, 3000);
+      }
+
+      function copyToClipboard(text) {
+        navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            log(`📋 Copied to clipboard: ${text}`);
+          })
+          .catch((err) => {
+            log(`❌ Failed to copy: ${err.message}`);
+          });
+      }
+
+      function updateButtons(disabled) {
+        const buttons = document.querySelectorAll(".scan-button");
+        buttons.forEach((button) => {
+          button.disabled = disabled;
+        });
+      }
+
+      // Auto-start quick scan when page loads
+      window.addEventListener("load", () => {
+        setTimeout(quickScan, 1000);
+      });
+    </script>
+  </body>
+</html>

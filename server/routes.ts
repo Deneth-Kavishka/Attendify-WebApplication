@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer } from "ws";
 import { dbStorage as storage } from "./storage";
 import hardwareRoutes from "./hardware-routes";
+import { deviceStatusMonitor } from "./device-status-monitor";
 import {
   insertUserSchema,
   insertStudentSchema,
@@ -1077,23 +1078,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/hardware/heartbeat", async (req, res) => {
+  // Hardware statistics
+  app.get("/api/hardware/stats", requireAuth, async (req, res) => {
     try {
-      const { deviceId } = req.body;
-      const device = await storage.getHardwareDeviceByDeviceId(deviceId);
+      const devices = await storage.getAllHardwareDevices();
 
-      if (device) {
-        await storage.updateHardwareDevice(device.id, {
-          status: "online",
-          lastHeartbeat: new Date(),
-        });
+      const totalDevices = devices.length;
+      const onlineDevices = devices.filter((d) => d.status === "online").length;
+      const offlineDevices = devices.filter(
+        (d) => d.status === "offline"
+      ).length;
+      const maintenanceDevices = devices.filter(
+        (d) => d.status === "maintenance"
+      ).length;
 
-        // Hardware status updated (WebSocket removed for stability)
-      }
+      // Calculate daily scans (sum of all device scans today)
+      const dailyScans = devices.reduce((sum, device) => {
+        return sum + (device.totalScans || 0);
+      }, 0);
 
-      res.json({ message: "Heartbeat received" });
+      // Calculate system health based on online devices ratio and recent heartbeats
+      const now = new Date();
+      const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+      const recentlyActiveDevices = devices.filter(
+        (d) => d.lastHeartbeat && new Date(d.lastHeartbeat) > fiveMinutesAgo
+      ).length;
+
+      const systemHealth =
+        totalDevices > 0
+          ? Math.round((recentlyActiveDevices / totalDevices) * 100)
+          : 100;
+
+      // Average memory usage across online devices
+      const onlineDevicesWithMemory = devices.filter(
+        (d) => d.status === "online" && d.freeMemory !== null
+      );
+      const avgMemoryUsage =
+        onlineDevicesWithMemory.length > 0
+          ? Math.round(
+              onlineDevicesWithMemory.reduce(
+                (sum, d) => sum + (d.freeMemory || 0),
+                0
+              ) / onlineDevicesWithMemory.length
+            )
+          : 0;
+
+      res.json({
+        totalDevices,
+        onlineDevices,
+        offlineDevices,
+        maintenanceDevices,
+        dailyScans,
+        systemHealth,
+        avgMemoryUsage,
+        deviceTypes: {
+          esp32_cam: devices.filter((d) => d.deviceType === "esp32_cam").length,
+          rfid_reader: devices.filter((d) => d.deviceType === "rfid_reader")
+            .length,
+        },
+      });
     } catch (error) {
-      res.status(500).json({ message: "Failed to update heartbeat" });
+      console.error("Error getting hardware stats:", error);
+      res.status(500).json({ message: "Failed to get hardware statistics" });
     }
   });
 
@@ -2060,12 +2106,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add new hardware device
   app.post("/api/hardware/add", requireAuth, async (req, res) => {
     try {
-      const { deviceId, deviceType, location, configuration } = req.body;
+      const {
+        deviceId,
+        deviceType,
+        location,
+        ipAddress,
+        description,
+        configuration,
+      } = req.body;
 
       if (!deviceId || !deviceType || !location) {
         return res
           .status(400)
           .json({ message: "Device ID, type, and location are required" });
+      }
+
+      // Validate device type
+      if (!["esp32_cam", "rfid_reader"].includes(deviceType)) {
+        return res.status(400).json({
+          message: "Device type must be 'esp32_cam' or 'rfid_reader'",
+        });
       }
 
       // Check if device already exists
@@ -2082,9 +2142,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         deviceId,
         deviceType,
         location,
-        status: "online",
-        lastHeartbeat: new Date(),
+        status: "offline", // Start as offline until first heartbeat
+        lastHeartbeat: null,
         configuration: configuration || {},
+        ipAddress: ipAddress || null,
+        description: description || null,
+        macAddress: null, // Will be updated on first heartbeat
+        firmwareVersion: null, // Will be updated on first heartbeat
+        batteryLevel: null,
+        signalStrength: null,
+        freeMemory: null,
+        uptimeHours: null,
+        totalScans: 0,
+        successfulScans: 0,
+        lastErrorMessage: null,
+        lastErrorTime: null,
       });
 
       // Broadcast new device addition
@@ -2092,6 +2164,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type: "device_added",
         data: newDevice,
       });
+
+      console.log(
+        `✅ New ${deviceType} device registered: ${deviceId} at ${location}`
+      );
 
       res.status(201).json({
         message: "Hardware device added successfully",
@@ -2896,6 +2972,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Hardware IoT routes for ESP32-CAM and RFID devices
   app.use("/api/hardware", hardwareRoutes);
+
+  // Device Status Monitor management endpoints
+  app.get("/api/monitor/status", async (req, res) => {
+    try {
+      const status = deviceStatusMonitor.getStatus();
+      res.json(status);
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({
+          message: "Failed to get monitor status",
+          error: error.message,
+        });
+    }
+  });
+
+  app.post("/api/monitor/check", async (req, res) => {
+    try {
+      const result = await deviceStatusMonitor.checkNow();
+      res.json(result);
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({
+          message: "Failed to check device status",
+          error: error.message,
+        });
+    }
+  });
+
+  app.post("/api/monitor/configure", async (req, res) => {
+    try {
+      const { checkInterval, offlineThreshold } = req.body;
+      deviceStatusMonitor.configure({ checkInterval, offlineThreshold });
+      const status = deviceStatusMonitor.getStatus();
+      res.json({ message: "Monitor configured successfully", status });
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({ message: "Failed to configure monitor", error: error.message });
+    }
+  });
+
+  app.post("/api/monitor/start", async (req, res) => {
+    try {
+      deviceStatusMonitor.start();
+      const status = deviceStatusMonitor.getStatus();
+      res.json({ message: "Monitor started", status });
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({ message: "Failed to start monitor", error: error.message });
+    }
+  });
+
+  app.post("/api/monitor/stop", async (req, res) => {
+    try {
+      deviceStatusMonitor.stop();
+      const status = deviceStatusMonitor.getStatus();
+      res.json({ message: "Monitor stopped", status });
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({ message: "Failed to stop monitor", error: error.message });
+    }
+  });
 
   return httpServer;
 }

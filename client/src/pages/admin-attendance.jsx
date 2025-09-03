@@ -57,6 +57,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { format } from "date-fns";
+import { LiveCameraMonitor } from "@/components/ui/live-camera-monitor";
 
 // Real-time attendance monitoring component
 function RealTimeAttendanceMonitor() {
@@ -249,6 +250,10 @@ function HardwareDeviceStatus() {
     }
   };
 
+  const onlineDevices = devices.filter((d) => d.status === "online").length;
+  const offlineDevices = devices.filter((d) => d.status === "offline").length;
+  const totalScans = devices.reduce((sum, d) => sum + (d.totalScans || 0), 0);
+
   return (
     <Card>
       <CardHeader>
@@ -268,158 +273,68 @@ function HardwareDeviceStatus() {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 gap-3">
-          {/* Real-time simulated devices */}
-          <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-green-50 to-blue-50">
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <i className="fas fa-camera text-blue-600 text-lg"></i>
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></span>
-              </div>
-              <div>
-                <p className="font-medium">ESP32-CAM-01</p>
-                <p className="text-sm text-gray-500">Main Entrance Camera</p>
-                <p className="text-xs text-gray-400">
-                  Scans: {deviceStates.esp32_cam_01?.scans || 0} today
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <Badge
-                variant="outline"
-                className={`${getStatusColor(
-                  deviceStates.esp32_cam_01?.status || "online"
-                )} mb-1`}
+          {/* Dynamic device list from API */}
+          {devices.length > 0 ? (
+            devices.map((device) => (
+              <div
+                key={device.id}
+                className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-green-50 to-blue-50"
               >
-                <span className="flex items-center">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
-                  {deviceStates.esp32_cam_01?.status || "online"}
-                </span>
-              </Badge>
-              <p className="text-xs text-gray-500">
-                {format(
-                  deviceStates.esp32_cam_01?.lastSeen || new Date(),
-                  "HH:mm:ss"
-                )}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-green-50 to-green-50">
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <i className="fas fa-credit-card text-green-600 text-lg"></i>
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full"></span>
-              </div>
-              <div>
-                <p className="font-medium">RFID-READER-01</p>
-                <p className="text-sm text-gray-500">Entrance Card Scanner</p>
-                <p className="text-xs text-gray-400">
-                  Scans: {deviceStates.rfid_reader_01?.scans || 0} today
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <Badge
-                variant="outline"
-                className={`${getStatusColor(
-                  deviceStates.rfid_reader_01?.status || "online"
-                )} mb-1`}
-              >
-                <span className="flex items-center">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></span>
-                  {deviceStates.rfid_reader_01?.status || "online"}
-                </span>
-              </Badge>
-              <p className="text-xs text-gray-500">
-                {format(
-                  deviceStates.rfid_reader_01?.lastSeen || new Date(),
-                  "HH:mm:ss"
-                )}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between p-3 border rounded-lg bg-gradient-to-r from-red-50 to-gray-50">
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <i className="fas fa-camera text-gray-400 text-lg"></i>
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </div>
-              <div>
-                <p className="font-medium text-gray-600">ESP32-CAM-02</p>
-                <p className="text-sm text-gray-400">Secondary Camera (Hall)</p>
-                <p className="text-xs text-gray-400">
-                  Offline since:{" "}
-                  {format(
-                    deviceStates.esp32_cam_02?.lastSeen ||
-                      new Date(Date.now() - 300000),
-                    "HH:mm"
-                  )}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <Badge
-                variant="outline"
-                className={`${getStatusColor(
-                  deviceStates.esp32_cam_02?.status || "offline"
-                )} mb-1`}
-              >
-                <span className="flex items-center">
-                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span>
-                  {deviceStates.esp32_cam_02?.status || "offline"}
-                </span>
-              </Badge>
-              <p className="text-xs text-gray-500">
-                {format(
-                  deviceStates.esp32_cam_02?.lastSeen ||
-                    new Date(Date.now() - 300000),
-                  "HH:mm:ss"
-                )}
-              </p>
-            </div>
-          </div>
-
-          {/* Database devices (if any) */}
-          {devices.length > 0 && (
-            <>
-              <div className="border-t pt-3 mt-2">
-                <p className="text-xs text-gray-500 mb-2">
-                  Registered Devices:
-                </p>
-              </div>
-              {devices.map((device) => (
-                <div
-                  key={device.id}
-                  className="flex items-center justify-between p-3 border rounded-lg bg-gray-50"
-                >
-                  <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
                     <i
                       className={`${getDeviceIcon(
                         device.deviceType
-                      )} text-blue-600`}
+                      )} text-blue-600 text-lg`}
                     ></i>
-                    <div>
-                      <p className="font-medium">{device.deviceId}</p>
-                      <p className="text-sm text-gray-500">{device.location}</p>
-                    </div>
+                    <span
+                      className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${
+                        device.status === "online"
+                          ? "bg-green-500"
+                          : device.status === "offline"
+                          ? "bg-red-500"
+                          : "bg-yellow-500"
+                      }`}
+                    ></span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge
-                      variant="outline"
-                      className={getStatusColor(device.status)}
-                    >
-                      {device.status}
-                    </Badge>
-                    <span className="text-xs text-gray-500">
-                      {device.lastHeartbeat
-                        ? format(new Date(device.lastHeartbeat), "HH:mm")
-                        : "N/A"}
-                    </span>
+                  <div>
+                    <p className="font-medium">{device.deviceId}</p>
+                    <p className="text-sm text-gray-500">{device.location}</p>
+                    <p className="text-xs text-gray-400">
+                      Scans: {device.totalScans || 0} today
+                    </p>
                   </div>
                 </div>
-              ))}
-            </>
+                <div className="text-right">
+                  <Badge
+                    variant="outline"
+                    className={`${getStatusColor(device.status)} mb-1`}
+                  >
+                    <span className="flex items-center">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                          device.status === "online"
+                            ? "bg-green-500 animate-pulse"
+                            : device.status === "offline"
+                            ? "bg-red-500"
+                            : "bg-yellow-500"
+                        }`}
+                      ></span>
+                      {device.status}
+                    </span>
+                  </Badge>
+                  <p className="text-xs text-gray-500">
+                    {device.lastHeartbeat
+                      ? format(new Date(device.lastHeartbeat), "HH:mm:ss")
+                      : "Never"}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-4 text-gray-500">
+              No hardware devices found
+            </div>
           )}
         </div>
 
@@ -428,31 +343,16 @@ function HardwareDeviceStatus() {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <p className="text-lg font-bold text-green-600">
-                {
-                  Object.values(deviceStates).filter(
-                    (d) => d.status === "online"
-                  ).length
-                }
+                {onlineDevices}
               </p>
               <p className="text-xs text-gray-600">Online</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-red-600">
-                {
-                  Object.values(deviceStates).filter(
-                    (d) => d.status === "offline"
-                  ).length
-                }
-              </p>
+              <p className="text-lg font-bold text-red-600">{offlineDevices}</p>
               <p className="text-xs text-gray-600">Offline</p>
             </div>
             <div>
-              <p className="text-lg font-bold text-blue-600">
-                {Object.values(deviceStates).reduce(
-                  (sum, d) => sum + d.scans,
-                  0
-                )}
-              </p>
+              <p className="text-lg font-bold text-blue-600">{totalScans}</p>
               <p className="text-xs text-gray-600">Total Scans</p>
             </div>
           </div>
@@ -963,221 +863,266 @@ export default function AdminAttendance() {
             <AttendanceStatistics />
           </div>
 
-          {/* Real-time monitoring and device status */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <RealTimeAttendanceMonitor />
-            <HardwareDeviceStatus />
-          </div>
+          {/* Tabs for different views */}
+          <Tabs defaultValue="monitoring" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger
+                value="monitoring"
+                className="flex items-center space-x-2"
+              >
+                <i className="fas fa-video"></i>
+                <span>Live Monitoring</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="realtime"
+                className="flex items-center space-x-2"
+              >
+                <i className="fas fa-clock"></i>
+                <span>Real-time Feed</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="records"
+                className="flex items-center space-x-2"
+              >
+                <i className="fas fa-table"></i>
+                <span>Attendance Records</span>
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Attendance Records */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Attendance Records</CardTitle>
-                  <CardDescription>
-                    View and manage all attendance records
-                  </CardDescription>
-                </div>
-                {selectedRecords.length > 0 && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => setIsDeleteDialogOpen(true)}
-                  >
-                    <i className="fas fa-trash mr-2"></i>
-                    Delete Selected ({selectedRecords.length})
-                  </Button>
-                )}
+            {/* Live Camera Monitoring Tab */}
+            <TabsContent value="monitoring">
+              <LiveCameraMonitor />
+            </TabsContent>
+
+            {/* Real-time monitoring and device status Tab */}
+            <TabsContent value="realtime">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <RealTimeAttendanceMonitor />
+                <HardwareDeviceStatus />
               </div>
-            </CardHeader>
-            <CardContent>
-              {/* Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-                <Input
-                  placeholder="Search students..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="md:col-span-2"
-                />
+            </TabsContent>
 
-                <Select value={filterClass} onValueChange={setFilterClass}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Classes" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Classes</SelectItem>
-                    {classes.map((cls) => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.classCode}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="present">Present</SelectItem>
-                    <SelectItem value="absent">Absent</SelectItem>
-                    <SelectItem value="late">Late</SelectItem>
-                    <SelectItem value="excused">Excused</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={filterMethod} onValueChange={setFilterMethod}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Methods" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Methods</SelectItem>
-                    <SelectItem value="face_recognition">
-                      Face Recognition
-                    </SelectItem>
-                    <SelectItem value="rfid">RFID</SelectItem>
-                    <SelectItem value="manual">Manual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Date picker */}
-              <div className="mb-6">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline">
-                      <i className="fas fa-calendar mr-2"></i>
-                      {format(filterDate, "PPP")}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={filterDate}
-                      onSelect={setFilterDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Attendance Table */}
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <Checkbox
-                          checked={
-                            selectedRecords.length === filteredRecords.length &&
-                            filteredRecords.length > 0
-                          }
-                          onCheckedChange={handleSelectAll}
-                        />
-                      </TableHead>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Class</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Method</TableHead>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Device</TableHead>
-                      <TableHead>Confidence</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recordsLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8">
-                          <i className="fas fa-spinner fa-spin mr-2"></i>
-                          Loading attendance records...
-                        </TableCell>
-                      </TableRow>
-                    ) : filteredRecords.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8">
-                          <i className="fas fa-calendar-times text-2xl text-gray-400 mb-2"></i>
-                          <p className="text-gray-500">
-                            No attendance records found
-                          </p>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredRecords.map((record) => (
-                        <TableRow key={record.id}>
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedRecords.includes(record.id)}
-                              onCheckedChange={(checked) =>
-                                handleSelectRecord(record.id, checked)
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">
-                                {record.student?.user?.fullName}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {record.student?.studentId}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">
-                                {record.class?.classCode}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {record.class?.className}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(record.status)}>
-                              {record.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              <i
-                                className={`${getMethodIcon(
-                                  record.method
-                                )} mr-2`}
-                              ></i>
-                              {record.method.replace("_", " ")}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(record.timestamp), "HH:mm:ss")}
-                          </TableCell>
-                          <TableCell>{record.deviceId || "N/A"}</TableCell>
-                          <TableCell>
-                            {record.confidence ? (
-                              <span
-                                className={
-                                  record.confidence >= 0.8
-                                    ? "text-green-600"
-                                    : record.confidence >= 0.6
-                                    ? "text-yellow-600"
-                                    : "text-red-600"
-                                }
-                              >
-                                {(record.confidence * 100).toFixed(1)}%
-                              </span>
-                            ) : (
-                              "N/A"
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))
+            {/* Attendance Records Tab */}
+            <TabsContent value="records">
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Attendance Records</CardTitle>
+                      <CardDescription>
+                        View and manage all attendance records
+                      </CardDescription>
+                    </div>
+                    {selectedRecords.length > 0 && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setIsDeleteDialogOpen(true)}
+                      >
+                        <i className="fas fa-trash mr-2"></i>
+                        Delete Selected ({selectedRecords.length})
+                      </Button>
                     )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {/* Filters */}
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                    <Input
+                      placeholder="Search students..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="md:col-span-2"
+                    />
+
+                    <Select value={filterClass} onValueChange={setFilterClass}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Classes" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Classes</SelectItem>
+                        {classes.map((cls) => (
+                          <SelectItem key={cls.id} value={cls.id}>
+                            {cls.classCode}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={filterStatus}
+                      onValueChange={setFilterStatus}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="present">Present</SelectItem>
+                        <SelectItem value="absent">Absent</SelectItem>
+                        <SelectItem value="late">Late</SelectItem>
+                        <SelectItem value="excused">Excused</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={filterMethod}
+                      onValueChange={setFilterMethod}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Methods" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Methods</SelectItem>
+                        <SelectItem value="face_recognition">
+                          Face Recognition
+                        </SelectItem>
+                        <SelectItem value="rfid">RFID</SelectItem>
+                        <SelectItem value="manual">Manual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Date picker */}
+                  <div className="mb-6">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline">
+                          <i className="fas fa-calendar mr-2"></i>
+                          {format(filterDate, "PPP")}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={filterDate}
+                          onSelect={setFilterDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Attendance Table */}
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">
+                            <Checkbox
+                              checked={
+                                selectedRecords.length ===
+                                  filteredRecords.length &&
+                                filteredRecords.length > 0
+                              }
+                              onCheckedChange={handleSelectAll}
+                            />
+                          </TableHead>
+                          <TableHead>Student</TableHead>
+                          <TableHead>Class</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Method</TableHead>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Device</TableHead>
+                          <TableHead>Confidence</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {recordsLoading ? (
+                          <TableRow>
+                            <TableCell colSpan={8} className="text-center py-8">
+                              <i className="fas fa-spinner fa-spin mr-2"></i>
+                              Loading attendance records...
+                            </TableCell>
+                          </TableRow>
+                        ) : filteredRecords.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={8} className="text-center py-8">
+                              <i className="fas fa-calendar-times text-2xl text-gray-400 mb-2"></i>
+                              <p className="text-gray-500">
+                                No attendance records found
+                              </p>
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredRecords.map((record) => (
+                            <TableRow key={record.id}>
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedRecords.includes(record.id)}
+                                  onCheckedChange={(checked) =>
+                                    handleSelectRecord(record.id, checked)
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">
+                                    {record.student?.user?.fullName}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    {record.student?.studentId}
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">
+                                    {record.class?.classCode}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    {record.class?.className}
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  className={getStatusColor(record.status)}
+                                >
+                                  {record.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center">
+                                  <i
+                                    className={`${getMethodIcon(
+                                      record.method
+                                    )} mr-2`}
+                                  ></i>
+                                  {record.method.replace("_", " ")}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {format(new Date(record.timestamp), "HH:mm:ss")}
+                              </TableCell>
+                              <TableCell>{record.deviceId || "N/A"}</TableCell>
+                              <TableCell>
+                                {record.confidence ? (
+                                  <span
+                                    className={
+                                      record.confidence >= 0.8
+                                        ? "text-green-600"
+                                        : record.confidence >= 0.6
+                                        ? "text-yellow-600"
+                                        : "text-red-600"
+                                    }
+                                  >
+                                    {(record.confidence * 100).toFixed(1)}%
+                                  </span>
+                                ) : (
+                                  "N/A"
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
 
