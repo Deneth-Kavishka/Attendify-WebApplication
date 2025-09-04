@@ -4,6 +4,8 @@ import { WebSocketServer } from "ws";
 import { dbStorage as storage } from "./storage";
 import hardwareRoutes from "./hardware-routes";
 import { deviceStatusMonitor } from "./device-status-monitor";
+import { enhancedRFIDService } from "./enhanced-rfid-service";
+import { smartTrackWebSocketService } from "./smarttrack-websocket-service";
 import {
   insertUserSchema,
   insertStudentSchema,
@@ -15,29 +17,34 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // WebSocket setup for real-time updates on a different port
-  const wss = new WebSocketServer({ port: 8080 });
-  const clients = new Set();
-
-  wss.on("connection", (ws) => {
-    console.log("WebSocket client connected");
-    clients.add(ws);
-    ws.on("close", () => {
-      console.log("WebSocket client disconnected");
-      clients.delete(ws);
-    });
+  // Enhanced WebSocket setup for all SmartTrack services - Listen on all interfaces
+  console.log("🔧 Creating WebSocket Server on 0.0.0.0:8080...");
+  const wss = new WebSocketServer({
+    port: 8080,
+    host: "0.0.0.0", // Listen on all interfaces, not just localhost
   });
 
-  // Broadcast function for real-time updates
+  wss.on("listening", () => {
+    console.log("✅ WebSocket Server listening on 0.0.0.0:8080");
+  });
+
+  wss.on("error", (error) => {
+    console.error("❌ WebSocket Server Error:", error);
+  });
+
+  // Initialize Enhanced SmartTrack WebSocket Service (this handles all connections now)
+  console.log("🔧 Initializing Enhanced SmartTrack WebSocket Service...");
+  smartTrackWebSocketService.init(wss);
+
+  // Broadcast function for real-time updates (integrated with SmartTrack service)
   const broadcast = (data: any) => {
-    const message = JSON.stringify(data);
-    clients.forEach((client: any) => {
-      if (client.readyState === 1) {
-        // WebSocket.OPEN
-        client.send(message);
-      }
-    });
+    // Use SmartTrack service's broadcast method
+    smartTrackWebSocketService.broadcastToAllClients(data);
   };
+
+  // Initialize Enhanced RFID Service with enhanced WebSocket server
+  console.log("🔧 Initializing Enhanced RFID Service...");
+  await enhancedRFIDService.initialize(wss);
 
   // Authentication middleware
   const requireAuth = (req: any, res: any, next: any) => {
@@ -313,7 +320,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!student) {
         return res.status(404).json({ message: "Student not found" });
       }
-      res.json(student);
+
+      // Get user details for the student
+      const user = await storage.getUser(student.userId);
+      const studentWithUserDetails = {
+        ...student,
+        fullName: user?.fullName,
+        email: user?.email,
+        department: user?.department,
+        createdAt: user?.createdAt,
+      };
+
+      res.json(studentWithUserDetails);
     } catch (error) {
       res.status(500).json({ message: "Failed to get student" });
     }
@@ -329,12 +347,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         rfidCard,
         department,
         active,
+        // Personal Information
+        nic,
+        mobileNumber,
+        gender,
+        dateOfBirth,
+        address,
+        guardianName,
+        guardianContact,
+        emergencyContact,
+        // Academic Information
+        batch,
+        semester,
+        gpa,
+        // RFID & Face Recognition
+        faceRegistrationStatus,
+        faceImagesData,
       } = req.body;
 
       // Get the student first to get userId
       const existingStudent = await storage.getStudent(req.params.id);
       if (!existingStudent) {
         return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Check if studentId is being changed and if it conflicts
+      if (studentId && studentId !== existingStudent.studentId) {
+        const existingByStudentId = await storage.getStudentByStudentId(
+          studentId
+        );
+        if (existingByStudentId && existingByStudentId.id !== req.params.id) {
+          return res.status(400).json({ message: "Student ID already exists" });
+        }
+      }
+
+      // Check if NIC is being changed and if it conflicts
+      if (nic && nic !== existingStudent.nic) {
+        const existingByNic = await storage.getStudentByNic(nic);
+        if (existingByNic && existingByNic.id !== req.params.id) {
+          return res.status(400).json({ message: "NIC already registered" });
+        }
+      }
+
+      // Check if RFID card is being changed and if it conflicts
+      if (rfidCard && rfidCard !== existingStudent.rfidCard) {
+        const existingByRfid = await storage.getStudentByRfidCard(rfidCard);
+        if (existingByRfid && existingByRfid.id !== req.params.id) {
+          return res.status(400).json({
+            message: "RFID card already assigned to another student",
+          });
+        }
       }
 
       // Update user details
@@ -344,12 +406,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         department,
       });
 
-      // Update student details
+      // Update student details with all fields
       const student = await storage.updateStudent(req.params.id, {
         studentId,
         enrollmentYear,
         rfidCard: rfidCard || null,
         active,
+        // Personal Information
+        nic,
+        mobileNumber,
+        gender,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        address,
+        guardianName,
+        guardianContact,
+        emergencyContact,
+        // Academic Information
+        batch,
+        semester,
+        gpa: gpa ? gpa.toString() : null,
+        // Face Recognition
+        faceRegistrationStatus,
+        faceEmbedding: faceImagesData
+          ? JSON.stringify(faceImagesData)
+          : undefined,
       });
 
       // Get updated user for response
@@ -2979,12 +3059,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const status = deviceStatusMonitor.getStatus();
       res.json(status);
     } catch (error: any) {
-      res
-        .status(500)
-        .json({
-          message: "Failed to get monitor status",
-          error: error.message,
-        });
+      res.status(500).json({
+        message: "Failed to get monitor status",
+        error: error.message,
+      });
     }
   });
 
@@ -2993,12 +3071,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await deviceStatusMonitor.checkNow();
       res.json(result);
     } catch (error: any) {
-      res
-        .status(500)
-        .json({
-          message: "Failed to check device status",
-          error: error.message,
-        });
+      res.status(500).json({
+        message: "Failed to check device status",
+        error: error.message,
+      });
     }
   });
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useRFIDReader } from "@/lib/rfid-reader";
+import { RFIDSerialService } from "@/lib/rfid-serial-service";
 
 export default function EnhancedStudentForm({
   student = null,
@@ -58,7 +58,19 @@ export default function EnhancedStudentForm({
   const [rfidScanning, setRfidScanning] = useState(false);
   const [scannedRfid, setScannedRfid] = useState("");
   const [isGeneratingRfid, setIsGeneratingRfid] = useState(false);
-  const { scanCard, stopScan, getReaderStatus, isSupported } = useRFIDReader();
+  const [rfidService, setRfidService] = useState(null);
+
+  // Initialize RFID service
+  useEffect(() => {
+    const service = new RFIDSerialService();
+    setRfidService(service);
+
+    return () => {
+      if (service) {
+        service.disconnect();
+      }
+    };
+  }, []);
 
   const generateNewRfid = async () => {
     setIsGeneratingRfid(true);
@@ -156,20 +168,17 @@ export default function EnhancedStudentForm({
   };
 
   const startRfidScan = async () => {
-    setRfidScanning(true);
-    setScannedRfid("");
-
-    // Check if RFID reader is supported
-    if (!isSupported) {
+    if (!rfidService) {
       toast({
-        title: "RFID Not Supported",
-        description:
-          "Your browser doesn't support RFID reader access. Please use Chrome or Edge.",
+        title: "RFID Service Not Ready",
+        description: "RFID service is not initialized. Please try again.",
         variant: "destructive",
       });
-      setRfidScanning(false);
       return;
     }
+
+    setRfidScanning(true);
+    setScannedRfid("");
 
     toast({
       title: "RFID Scanner Starting",
@@ -177,40 +186,51 @@ export default function EnhancedStudentForm({
     });
 
     try {
-      // Start real RFID scanning
-      const cardId = await scanCard();
+      // Connect to RFID service
+      await rfidService.connect();
 
-      // Check if card is already assigned to another student
-      const checkResponse = await fetch(`/api/rfid/check/${cardId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
+      // Start registration scan
+      const cardId = await rfidService.startRegistrationScan();
 
-      if (checkResponse.ok) {
-        const checkData = await checkResponse.json();
-        if (!checkData.available) {
-          toast({
-            title: "RFID Card Already Assigned",
-            description: `This card is already assigned to student: ${checkData.assignedTo}`,
-            variant: "destructive",
-          });
-          setRfidScanning(false);
-          return;
+      if (cardId) {
+        // Check if card is already assigned to another student
+        const checkResponse = await fetch(`/api/rfid/check/${cardId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json();
+          if (!checkData.available) {
+            toast({
+              title: "RFID Card Already Assigned",
+              description: `This card is already assigned to student: ${checkData.assignedTo}`,
+              variant: "destructive",
+            });
+            setRfidScanning(false);
+            return;
+          }
         }
+
+        // Card is available, assign it
+        setScannedRfid(cardId);
+        setFormData((prev) => ({
+          ...prev,
+          rfidCard: cardId,
+          rfidOption: "scan",
+        }));
+        setRfidScanning(false);
+
+        toast({
+          title: "RFID Card Scanned Successfully",
+          description: `Card ${cardId} is ready for assignment`,
+        });
+      } else {
+        setRfidScanning(false);
+        toast({
+          title: "RFID Scanning Cancelled",
+          description: "No card was scanned",
+        });
       }
-
-      // Card is available, assign it
-      setScannedRfid(cardId);
-      setFormData((prev) => ({
-        ...prev,
-        rfidCard: cardId,
-        rfidOption: "scan",
-      }));
-      setRfidScanning(false);
-
-      toast({
-        title: "RFID Card Scanned Successfully",
-        description: `Card ${cardId} is ready for assignment`,
-      });
     } catch (error) {
       console.error("RFID scanning error:", error);
       toast({
@@ -225,7 +245,9 @@ export default function EnhancedStudentForm({
 
   const stopRfidScan = () => {
     setRfidScanning(false);
-    stopScan();
+    if (rfidService) {
+      rfidService.stopRegistrationScan();
+    }
     toast({
       title: "RFID Scanning Stopped",
       description: "RFID scanner has been stopped",

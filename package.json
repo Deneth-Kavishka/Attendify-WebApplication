@@ -11,7 +11,10 @@
     "db:push": "drizzle-kit push",
     "db:setup": "tsx server/db-setup.ts",
     "db:status": "tsx server/db-status.ts",
-    "rfid": "node rfid-service.js"
+    "db:test": "tsx server/database.ts",
+    "rfid": "node rfid-service.js",
+    "test:rfid": "tsx test-enhanced-rfid-system.ts",
+    "dev:client": "cd client && npm run dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

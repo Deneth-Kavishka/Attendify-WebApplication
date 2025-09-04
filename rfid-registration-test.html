@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RFID Registration Test</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+      .container {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .status {
+        padding: 15px;
+        border-radius: 8px;
+        margin: 10px 0;
+        font-weight: bold;
+      }
+      .status.connected {
+        background: #d4edda;
+        color: #155724;
+      }
+      .status.disconnected {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .status.scanning {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .status.success {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        margin: 5px;
+        font-size: 16px;
+        transition: background 0.3s;
+      }
+      button:hover {
+        background: #5a67d8;
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .log {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 15px;
+        max-height: 300px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 14px;
+        margin-top: 20px;
+      }
+      .test-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+      }
+      .card-input {
+        margin: 20px 0;
+      }
+      .card-input input {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 200px;
+        margin-right: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏫 SmartTrack RFID Registration Test</h1>
+
+      <div id="status" class="status disconnected">
+        🔌 Disconnected from RFID Server
+      </div>
+
+      <div class="test-buttons">
+        <button id="connectBtn" onclick="connectToServer()">
+          Connect to Server
+        </button>
+        <button id="startRegBtn" onclick="startRegistration()" disabled>
+          Start Registration
+        </button>
+        <button id="stopRegBtn" onclick="stopRegistration()" disabled>
+          Stop Registration
+        </button>
+        <button id="clearLogBtn" onclick="clearLog()">Clear Log</button>
+      </div>
+
+      <div class="card-input">
+        <h3>🧪 Test Card Simulation</h3>
+        <input
+          type="text"
+          id="cardIdInput"
+          placeholder="Enter Card ID (e.g., BF74B21F)"
+          value="NEW12345"
+        />
+        <button onclick="simulateCardScan()">Simulate Card Scan</button>
+      </div>
+
+      <div class="test-buttons">
+        <h3>🚀 Quick Tests</h3>
+        <button onclick="testNewCard()">Test New Card</button>
+        <button onclick="testExistingCard()">
+          Test Existing Card (BF74B21F)
+        </button>
+        <button onclick="testRegistrationFlow()">
+          Test Full Registration Flow
+        </button>
+      </div>
+
+      <div id="log" class="log">
+        📋 Ready to test RFID registration...<br />
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      let socket = null;
+      let isConnected = false;
+      let registrationActive = false;
+
+      function log(message, type = "info") {
+        const logDiv = document.getElementById("log");
+        const timestamp = new Date().toLocaleTimeString();
+        const typeIcon =
+          {
+            info: "📋",
+            success: "✅",
+            error: "❌",
+            warning: "⚠️",
+            scan: "🏷️",
+          }[type] || "📋";
+
+        logDiv.innerHTML += `[${timestamp}] ${typeIcon} ${message}<br>`;
+        logDiv.scrollTop = logDiv.scrollHeight;
+      }
+
+      function updateStatus(message, className) {
+        const statusDiv = document.getElementById("status");
+        statusDiv.textContent = message;
+        statusDiv.className = `status ${className}`;
+      }
+
+      function updateButtons() {
+        document.getElementById("connectBtn").disabled = isConnected;
+        document.getElementById("startRegBtn").disabled =
+          !isConnected || registrationActive;
+        document.getElementById("stopRegBtn").disabled =
+          !isConnected || !registrationActive;
+      }
+
+      function connectToServer() {
+        log("🔗 Connecting to RFID WebSocket server...", "info");
+
+        socket = io("http://localhost:5001");
+
+        socket.on("connect", () => {
+          isConnected = true;
+          updateStatus("🔗 Connected to RFID Server", "connected");
+          log("✅ Connected to WebSocket server", "success");
+          updateButtons();
+        });
+
+        socket.on("disconnect", () => {
+          isConnected = false;
+          registrationActive = false;
+          updateStatus("🔌 Disconnected from RFID Server", "disconnected");
+          log("❌ Disconnected from WebSocket server", "error");
+          updateButtons();
+        });
+
+        socket.on("connected", (data) => {
+          log(`📡 Server says: ${data.message}`, "success");
+        });
+
+        // Registration events
+        socket.on("registration_scan_started", (data) => {
+          registrationActive = true;
+          updateStatus(
+            "🎯 Registration Scanning Active - Present RFID card",
+            "scanning"
+          );
+          log(`🎯 Registration started: ${data.message}`, "warning");
+          updateButtons();
+        });
+
+        socket.on("registration_scan_stopped", (data) => {
+          registrationActive = false;
+          updateStatus("🔗 Connected to RFID Server", "connected");
+          log(`⏹️ Registration stopped: ${data.message}`, "info");
+          updateButtons();
+        });
+
+        // Card scan events
+        socket.on("card_scanned_for_registration", (data) => {
+          log(`🏷️ Card scanned for registration: ${data.cardId}`, "scan");
+          log(`✅ Available: ${data.message}`, "success");
+          registrationActive = false;
+          updateStatus(
+            "✅ Card Successfully Scanned for Registration",
+            "success"
+          );
+          updateButtons();
+        });
+
+        socket.on("card_already_registered", (data) => {
+          log(`🏷️ Card already registered: ${data.cardId}`, "scan");
+          log(`❌ Error: ${data.message}`, "error");
+          updateStatus("❌ Card Already Registered", "error");
+        });
+
+        socket.on("registration_scan_error", (data) => {
+          log(`❌ Registration error: ${data.message}`, "error");
+          registrationActive = false;
+          updateStatus("❌ Registration Error", "error");
+          updateButtons();
+        });
+
+        // Availability check events
+        socket.on("rfid_availability_result", (data) => {
+          if (data.available) {
+            log(
+              `✅ Card ${data.cardId} is available for registration`,
+              "success"
+            );
+          } else {
+            log(
+              `❌ Card ${data.cardId} is already assigned to ${data.assignedTo}`,
+              "error"
+            );
+          }
+        });
+      }
+
+      function startRegistration() {
+        if (!isConnected) return;
+
+        log("🎯 Starting registration scan...", "info");
+        socket.emit("start_registration_scan", {
+          timeout: 30000,
+        });
+      }
+
+      function stopRegistration() {
+        if (!isConnected) return;
+
+        log("⏹️ Stopping registration scan...", "info");
+        socket.emit("stop_registration_scan");
+      }
+
+      function simulateCardScan() {
+        const cardId = document.getElementById("cardIdInput").value.trim();
+        if (!cardId) {
+          alert("Please enter a card ID");
+          return;
+        }
+
+        log(`🧪 Simulating card scan: ${cardId}`, "info");
+
+        // Call the API endpoint to simulate scan
+        fetch(`http://localhost:5001/api/simulate-scan/${cardId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            log(`📡 API Response: ${JSON.stringify(data)}`, "info");
+          })
+          .catch((error) => {
+            log(`❌ API Error: ${error.message}`, "error");
+          });
+      }
+
+      function testNewCard() {
+        document.getElementById("cardIdInput").value =
+          "NEW" + Math.random().toString(36).substr(2, 6).toUpperCase();
+        simulateCardScan();
+      }
+
+      function testExistingCard() {
+        document.getElementById("cardIdInput").value = "BF74B21F";
+        simulateCardScan();
+      }
+
+      function testRegistrationFlow() {
+        log("🧪 Starting full registration flow test...", "info");
+
+        setTimeout(() => {
+          startRegistration();
+        }, 1000);
+
+        setTimeout(() => {
+          document.getElementById("cardIdInput").value =
+            "TEST" + Math.random().toString(36).substr(2, 6).toUpperCase();
+          simulateCardScan();
+        }, 3000);
+      }
+
+      function clearLog() {
+        document.getElementById("log").innerHTML = "📋 Log cleared...<br>";
+      }
+
+      // Auto-connect when page loads
+      window.addEventListener("load", () => {
+        log("🚀 RFID Registration Test Interface Ready", "info");
+        updateButtons();
+      });
+    </script>
+  </body>
+</html>

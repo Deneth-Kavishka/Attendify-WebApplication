@@ -50,6 +50,37 @@ export default function AdminDashboard() {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
+  // Test RFID scanning function
+  const testRFIDScan = async (cardId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5001/api/simulate-scan/${cardId}`
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "✅ Test Scan Successful",
+          description: result.message,
+          duration: 3000,
+        });
+      } else {
+        toast({
+          title: "❌ Test Scan Result",
+          description: result.message,
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "❌ Test Failed",
+        description: "Unable to connect to RFID service",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
   // Fetch hardware devices for sidebar
   const { data: hardwareDevices = [] } = useQuery({
     queryKey: ["/api/hardware"],
@@ -470,6 +501,31 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Real-time Attendance Feed */}
             <div className="lg:col-span-2">
+              {/* Test RFID Scanning Buttons 
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="text-sm font-semibold text-blue-800 mb-2">🧪 Test RFID System</h4>
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    onClick={() => testRFIDScan('BF74B21F')}
+                    className="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full hover:bg-green-200 transition-colors"
+                  >
+                    Test Your Card (BF74B21F)
+                  </button>
+                  <button 
+                    onClick={() => testRFIDScan('F6C9D600')}
+                    className="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200 transition-colors"
+                  >
+                    Test Card 2 (F6C9D600)
+                  </button>
+                  <button 
+                    onClick={() => testRFIDScan('UNKNOWN123')}
+                    className="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full hover:bg-red-200 transition-colors"
+                  >
+                    Test Unknown Card
+                  </button>
+                </div>
+              </div>*/}
+
               <AttendanceFeed />
             </div>
 

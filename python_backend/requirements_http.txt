@@ -1,0 +1,22 @@
+# SmartTrack RFID HTTP Server Requirements (PostgreSQL Version)
+# ============================================================
+# Production-ready Python backend for RFID attendance system
+# Compatible with React frontend and Firebase integration
+# Uses PostgreSQL database (same as main SmartTrack app)
+
+# Core Flask framework
+Flask==2.3.3
+flask-cors==4.0.0
+
+# PostgreSQL database
+psycopg2-binary==2.9.7
+python-dotenv==1.0.0
+
+# Firebase integration
+firebase-admin==6.2.0
+
+# Utilities
+requests==2.31.0
+
+# Development and debugging
+colorama==0.4.6

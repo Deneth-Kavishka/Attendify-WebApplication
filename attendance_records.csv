@@ -1,0 +1,6 @@
+timestamp,student_id,rfid_card,name,department,device_id,location,scan_type,status
+2025-09-04 04:47:24,ST004,BF74B21F,Deneth Kavishka,IoT Development,RFID_SCANNER_001,Main Entrance,first_scan,present
+2025-09-04 04:47:27,ST004,BF74B21F,Deneth Kavishka,IoT Development,RFID_SCANNER_001,Main Entrance,additional_scan,present
+2025-09-04 04:47:28,ST004,BF74B21F,Deneth Kavishka,IoT Development,RFID_SCANNER_001,Main Entrance,additional_scan,present
+2025-09-04 05:10:01,ST004,BF74B21F,Deneth Kavishka,IoT Development,RFID_SCANNER_001,Main Entrance,additional_scan,present
+2025-09-04 05:10:27,ST004,BF74B21F,Deneth Kavishka,IoT Development,RFID_SCANNER_001,Main Entrance,additional_scan,present

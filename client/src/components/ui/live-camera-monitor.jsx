@@ -1099,7 +1099,7 @@ export function LiveCameraMonitor() {
 
       {/* Python Face Recognition Service Status */}
       <Card className="mt-4">
-        <CardHeader>
+        {/*<CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center">
               <i className="fas fa-python mr-2 text-blue-600"></i>
@@ -1122,8 +1122,8 @@ export function LiveCameraMonitor() {
               {pythonServiceStatus.connected ? "Online" : "Offline"}
             </Badge>
           </CardTitle>
-        </CardHeader>
-        <CardContent>
+        </CardHeader>*/}
+       {/*  <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <h4 className="font-medium text-gray-900">Service Status</h4>
@@ -1279,7 +1279,7 @@ export function LiveCameraMonitor() {
               </Button>
             )}
           </div>
-        </CardContent>
+        </CardContent>*/}
       </Card>
     </div>
   );

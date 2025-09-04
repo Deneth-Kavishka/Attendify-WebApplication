@@ -64,14 +64,23 @@ class RFIDReaderService {
   // WebSocket connection (for network-connected RFID readers or local service)
   async connectWebSocket() {
     try {
-      const wsUrl =
-        process.env.RFID_WEBSOCKET_URL || "ws://localhost:8081/rfid";
+      // Updated to use the main WebSocket server port 8080
+      const wsUrl = process.env.RFID_WEBSOCKET_URL || "ws://localhost:8080";
       this.reader = new WebSocket(wsUrl);
 
       return new Promise((resolve) => {
         this.reader.onopen = () => {
           this.isConnected = true;
           console.log("RFID Reader connected via WebSocket");
+
+          // Subscribe to RFID events
+          this.reader.send(
+            JSON.stringify({
+              type: "subscribe_rfid",
+              component: "rfid_reader_service",
+            })
+          );
+
           resolve(true);
         };
 
@@ -83,8 +92,17 @@ class RFIDReaderService {
         this.reader.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            if (data.type === "rfid_read" && data.cardId) {
+            // Handle different message types from the RFID service
+            if (data.type === "rfid_card_detected" && data.cardId) {
               this.handleCardRead(data.cardId);
+            } else if (data.type === "rfid_read" && data.cardId) {
+              this.handleCardRead(data.cardId);
+            } else if (data.type === "card_detected" && data.cardId) {
+              this.handleCardRead(data.cardId);
+            } else if (data.type === "welcome") {
+              console.log("RFID Service:", data.message);
+            } else if (data.type === "rfid_subscription_confirmed") {
+              console.log("RFID subscription confirmed");
             }
           } catch (error) {
             console.error("RFID data parse error:", error);

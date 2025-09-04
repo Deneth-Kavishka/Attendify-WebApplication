@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartTrack RFID Test Client</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        color: white;
+        font-size: 12px;
+        margin-left: 10px;
+      }
+      .connected {
+        background-color: #10b981;
+      }
+      .disconnected {
+        background-color: #ef4444;
+      }
+      .log {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 10px;
+        height: 300px;
+        overflow-y: scroll;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        margin: 10px 0;
+      }
+      .attendance-item {
+        background: #e0f2fe;
+        border: 1px solid #0891b2;
+        border-radius: 4px;
+        padding: 10px;
+        margin: 5px 0;
+      }
+      .unknown-item {
+        background: #fef2f2;
+        border: 1px solid #dc2626;
+        border-radius: 4px;
+        padding: 10px;
+        margin: 5px 0;
+      }
+      .test-buttons {
+        margin: 10px 0;
+      }
+      .test-button {
+        background: #3b82f6;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        margin: 5px;
+        cursor: pointer;
+      }
+      .test-button:hover {
+        background: #2563eb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎓 SmartTrack RFID Test Client</h1>
+
+      <h3>Connection Status</h3>
+      <div>
+        RFID WebSocket Service:
+        <span id="rfid-status" class="status disconnected">Disconnected</span>
+      </div>
+
+      <h3>Test Controls</h3>
+      <div class="test-buttons">
+        <button class="test-button" onclick="simulateScan('BF74B21F')">
+          Scan Deneth's Card
+        </button>
+        <button class="test-button" onclick="simulateScan('F6C9D600')">
+          Scan Test Card
+        </button>
+        <button class="test-button" onclick="simulateScan('1234567890')">
+          Scan John Doe
+        </button>
+        <button class="test-button" onclick="simulateScan('UNKNOWN123')">
+          Scan Unknown Card
+        </button>
+      </div>
+
+      <h3>Live Activity Log</h3>
+      <div id="log" class="log"></div>
+
+      <h3>Recent Attendance Feed</h3>
+      <div id="attendance-feed"></div>
+    </div>
+
+    <script>
+      // Connect to RFID WebSocket Service
+      const socket = io("http://localhost:5001");
+
+      const rfidStatus = document.getElementById("rfid-status");
+      const log = document.getElementById("log");
+      const attendanceFeed = document.getElementById("attendance-feed");
+
+      function addLog(message, type = "info") {
+        const timestamp = new Date().toLocaleTimeString();
+        const color =
+          type === "error"
+            ? "#dc2626"
+            : type === "success"
+            ? "#10b981"
+            : "#6b7280";
+        log.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+        log.scrollTop = log.scrollHeight;
+      }
+
+      function addAttendanceItem(data, isUnknown = false) {
+        const item = document.createElement("div");
+        item.className = isUnknown ? "unknown-item" : "attendance-item";
+
+        if (isUnknown) {
+          item.innerHTML = `
+                    <strong>❌ Unknown Card: ${data.rfidCard}</strong><br>
+                    <small>Device: ${data.deviceId} | Location: ${
+            data.location
+          } | Time: ${new Date(data.timestamp).toLocaleString()}</small>
+                `;
+        } else {
+          item.innerHTML = `
+                    <strong>✅ ${data.studentName} (${
+            data.studentId
+          })</strong><br>
+                    <small>Card: ${data.rfidCard} | Department: ${
+            data.department
+          } | Device: ${data.deviceId}</small><br>
+                    <small>Location: ${data.location} | Time: ${new Date(
+            data.timestamp
+          ).toLocaleString()}</small>
+                `;
+        }
+
+        attendanceFeed.insertBefore(item, attendanceFeed.firstChild);
+
+        // Keep only last 10 items
+        while (attendanceFeed.children.length > 10) {
+          attendanceFeed.removeChild(attendanceFeed.lastChild);
+        }
+      }
+
+      // Socket event handlers
+      socket.on("connect", () => {
+        rfidStatus.textContent = "Connected";
+        rfidStatus.className = "status connected";
+        addLog("🔗 Connected to RFID WebSocket Service", "success");
+      });
+
+      socket.on("disconnect", () => {
+        rfidStatus.textContent = "Disconnected";
+        rfidStatus.className = "status disconnected";
+        addLog("🔌 Disconnected from RFID WebSocket Service", "error");
+      });
+
+      socket.on("rfid_attendance", (data) => {
+        addLog(
+          `🎯 RFID Attendance: ${data.studentName} (${data.studentId})`,
+          "success"
+        );
+        addAttendanceItem(data, false);
+      });
+
+      socket.on("attendance_update", (data) => {
+        addLog(
+          `📨 Attendance Update: ${data.studentName || "Unknown"} (${
+            data.studentId || "N/A"
+          })`,
+          "info"
+        );
+        if (data.studentName) {
+          addAttendanceItem(data, false);
+        }
+      });
+
+      socket.on("unknown_card", (data) => {
+        addLog(`❌ Unknown Card: ${data.rfidCard}`, "error");
+        addAttendanceItem(data, true);
+      });
+
+      // Test function to simulate card scans
+      function simulateScan(cardId) {
+        addLog(`🧪 Simulating scan of card: ${cardId}`, "info");
+        fetch(`http://localhost:5001/api/simulate-scan/${cardId}`)
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              addLog(`✅ Simulation success: ${data.message}`, "success");
+            } else {
+              addLog(`❌ Simulation result: ${data.message}`, "error");
+            }
+          })
+          .catch((error) => {
+            addLog(`❌ Simulation error: ${error.message}`, "error");
+          });
+      }
+
+      // Initial log
+      addLog("🎓 SmartTrack RFID Test Client Started", "info");
+    </script>
+  </body>
+</html>

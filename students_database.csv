@@ -1,0 +1,6 @@
+student_id,rfid_card,name,email,department,year,phone,status
+ST001,ABC123456,John Doe,john.doe@university.edu,Computer Science,3,+1234567890,active
+ST002,DEF789012,Jane Smith,jane.smith@university.edu,Engineering,2,+1234567891,active
+ST003,GHI345678,Mike Johnson,mike.johnson@university.edu,Physics,4,+1234567892,active
+ST005,BF74B21F,Deneth Kavishka,deneth.kavishka@university.edu,IoT Development,4,+94771234567,active
+TEST001,TEST123456,Test Student,test@university.edu,Testing Department,1,+1234567893,active

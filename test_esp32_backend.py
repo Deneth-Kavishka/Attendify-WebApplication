@@ -39,7 +39,7 @@ def test_face_enrollment():
     url = "http://localhost:8000/api/face/enroll"
     
     payload = {
-        "student_id": "ST004",
+        "student_id": "ST005",
         "student_name": "Test Student",
         "image": test_image
     }

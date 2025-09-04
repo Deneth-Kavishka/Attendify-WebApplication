@@ -1,0 +1,298 @@
+{
+  "attendify_realtime": {
+    "live_attendance": {
+      "class-cs-001": {
+        "class_info": {
+          "class_name": "Introduction to Programming",
+          "class_code": "CS101",
+          "lecturer": "Dr. Sarah Johnson",
+          "room": "Room 101",
+          "current_session": "2024-09-04T09:00:00Z",
+          "total_enrolled": 120,
+          "present_count": 0,
+          "absent_count": 0,
+          "late_count": 0
+        },
+        "current_attendees": {},
+        "session_log": {}
+      },
+      "class-cs-002": {
+        "class_info": {
+          "class_name": "Data Structures",
+          "class_code": "CS201",
+          "lecturer": "Prof. Robert Taylor",
+          "room": "Room 102",
+          "current_session": "2024-09-04T10:00:00Z",
+          "total_enrolled": 115,
+          "present_count": 0,
+          "absent_count": 0,
+          "late_count": 0
+        },
+        "current_attendees": {},
+        "session_log": {}
+      },
+      "class-it-001": {
+        "class_info": {
+          "class_name": "Network Administration",
+          "class_code": "IT101",
+          "lecturer": "Dr. Alex Thompson",
+          "room": "Room 201",
+          "current_session": "2024-09-04T09:00:00Z",
+          "total_enrolled": 110,
+          "present_count": 0,
+          "absent_count": 0,
+          "late_count": 0
+        },
+        "current_attendees": {},
+        "session_log": {}
+      }
+    },
+    "hardware_status": {
+      "esp32_cameras": {
+        "ESP32_CAM_001": {
+          "device_id": "ESP32_CAM_001",
+          "location": "Room 101",
+          "status": "online",
+          "last_heartbeat": "2024-09-04T14:30:00Z",
+          "temperature": 35.2,
+          "memory_usage": 67,
+          "wifi_signal": -45,
+          "detection_count": 0,
+          "error_count": 0,
+          "uptime": 7200,
+          "firmware_version": "1.2.3"
+        },
+        "ESP32_CAM_002": {
+          "device_id": "ESP32_CAM_002",
+          "location": "Room 102",
+          "status": "online",
+          "last_heartbeat": "2024-09-04T14:30:00Z",
+          "temperature": 34.8,
+          "memory_usage": 62,
+          "wifi_signal": -48,
+          "detection_count": 0,
+          "error_count": 0,
+          "uptime": 7180,
+          "firmware_version": "1.2.3"
+        },
+        "ESP32_CAM_003": {
+          "device_id": "ESP32_CAM_003",
+          "location": "Room 103",
+          "status": "online",
+          "last_heartbeat": "2024-09-04T14:29:00Z",
+          "temperature": 36.1,
+          "memory_usage": 70,
+          "wifi_signal": -42,
+          "detection_count": 0,
+          "error_count": 0,
+          "uptime": 7150,
+          "firmware_version": "1.2.3"
+        }
+      },
+      "rfid_readers": {
+        "RFID_READER_001": {
+          "device_id": "RFID_READER_001",
+          "location": "Main Entrance",
+          "status": "online",
+          "last_heartbeat": "2024-09-04T14:30:00Z",
+          "reads_count": 0,
+          "error_count": 0,
+          "signal_strength": 85,
+          "battery_level": 98,
+          "uptime": 7200,
+          "firmware_version": "2.1.0"
+        },
+        "RFID_READER_002": {
+          "device_id": "RFID_READER_002",
+          "location": "Building A Entrance",
+          "status": "online",
+          "last_heartbeat": "2024-09-04T14:30:00Z",
+          "reads_count": 0,
+          "error_count": 0,
+          "signal_strength": 82,
+          "battery_level": 95,
+          "uptime": 7180,
+          "firmware_version": "2.1.0"
+        },
+        "RFID_READER_006": {
+          "device_id": "RFID_READER_006",
+          "location": "Room 101 Entrance",
+          "status": "online",
+          "last_heartbeat": "2024-09-04T14:30:00Z",
+          "reads_count": 0,
+          "error_count": 0,
+          "signal_strength": 88,
+          "battery_level": 92,
+          "uptime": 7200,
+          "firmware_version": "2.1.0"
+        }
+      }
+    },
+    "notifications": {
+      "system_alerts": {
+        "alert_001": {
+          "id": "alert_001",
+          "type": "info",
+          "title": "System Status",
+          "message": "All devices are online and functioning normally",
+          "timestamp": "2024-09-04T14:30:00Z",
+          "read": false,
+          "priority": "low"
+        },
+        "alert_002": {
+          "id": "alert_002",
+          "type": "success",
+          "title": "Attendance Session Started",
+          "message": "CS101 - Introduction to Programming session started in Room 101",
+          "timestamp": "2024-09-04T09:00:00Z",
+          "read": true,
+          "priority": "medium"
+        }
+      },
+      "attendance_alerts": {
+        "low_attendance_001": {
+          "id": "low_attendance_001",
+          "class_id": "class-cs-001",
+          "class_name": "Introduction to Programming",
+          "type": "warning",
+          "message": "Low attendance detected - only 60% present",
+          "timestamp": "2024-09-03T10:30:00Z",
+          "threshold": 75,
+          "actual": 60,
+          "read": false,
+          "priority": "high"
+        }
+      }
+    },
+    "analytics": {
+      "daily_stats": {
+        "2024-09-04": {
+          "total_classes": 25,
+          "active_classes": 3,
+          "total_students": 500,
+          "present_students": 340,
+          "absent_students": 160,
+          "attendance_rate": 68.0,
+          "device_uptime": 99.2,
+          "face_recognition_accuracy": 94.5,
+          "rfid_read_success": 98.8
+        },
+        "2024-09-03": {
+          "total_classes": 28,
+          "active_classes": 0,
+          "total_students": 500,
+          "present_students": 385,
+          "absent_students": 115,
+          "attendance_rate": 77.0,
+          "device_uptime": 98.9,
+          "face_recognition_accuracy": 95.2,
+          "rfid_read_success": 99.1
+        }
+      },
+      "weekly_trends": {
+        "week_36_2024": {
+          "average_attendance": 72.5,
+          "peak_attendance_day": "Wednesday",
+          "lowest_attendance_day": "Friday",
+          "device_reliability": 99.0,
+          "most_attended_class": "CS101",
+          "least_attended_class": "DS504"
+        }
+      }
+    },
+    "student_presence": {
+      "building_occupancy": {
+        "main_building": {
+          "current_count": 245,
+          "capacity": 800,
+          "occupancy_rate": 30.6,
+          "last_updated": "2024-09-04T14:30:00Z"
+        },
+        "building_a": {
+          "current_count": 156,
+          "capacity": 600,
+          "occupancy_rate": 26.0,
+          "last_updated": "2024-09-04T14:30:00Z"
+        },
+        "building_b": {
+          "current_count": 98,
+          "capacity": 400,
+          "occupancy_rate": 24.5,
+          "last_updated": "2024-09-04T14:30:00Z"
+        }
+      },
+      "room_occupancy": {
+        "room_101": {
+          "current_count": 0,
+          "capacity": 50,
+          "class_in_session": false,
+          "scheduled_class": "CS101",
+          "next_session": "2024-09-05T09:00:00Z"
+        },
+        "room_102": {
+          "current_count": 0,
+          "capacity": 45,
+          "class_in_session": false,
+          "scheduled_class": "CS201",
+          "next_session": "2024-09-05T10:00:00Z"
+        },
+        "library": {
+          "current_count": 78,
+          "capacity": 200,
+          "occupancy_rate": 39.0,
+          "last_updated": "2024-09-04T14:30:00Z"
+        }
+      }
+    },
+    "emergency_contacts": {
+      "security": {
+        "main_security": {
+          "name": "Campus Security",
+          "phone": "+1234567890",
+          "location": "Main Gate",
+          "status": "active"
+        }
+      },
+      "technical_support": {
+        "it_support": {
+          "name": "IT Support Team",
+          "phone": "+1234567891",
+          "email": "support@attendify.com",
+          "status": "active"
+        }
+      }
+    },
+    "configuration": {
+      "system_settings": {
+        "attendance_timeout": 300,
+        "face_recognition_threshold": 0.85,
+        "rfid_read_timeout": 5,
+        "session_duration": 90,
+        "notification_frequency": 60,
+        "auto_backup_interval": 3600,
+        "maintenance_mode": false
+      },
+      "class_schedules": {
+        "default_schedule": {
+          "session_duration": 90,
+          "break_duration": 15,
+          "late_threshold": 10,
+          "absent_threshold": 30
+        }
+      }
+    },
+    "backup_data": {
+      "last_backup": {
+        "timestamp": "2024-09-04T06:00:00Z",
+        "status": "success",
+        "records_count": 38963,
+        "file_size": "2.4MB"
+      },
+      "backup_schedule": {
+        "frequency": "daily",
+        "time": "06:00:00",
+        "retention_days": 30
+      }
+    }
+  }
+}

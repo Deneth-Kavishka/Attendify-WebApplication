@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Sidebar from "@/components/ui/sidebar";
 import EnhancedStudentForm from "@/components/ui/enhanced-student-form";
+import RFIDStudentRegistration from "@/components/ui/rfid-student-registration";
 import { useAuth } from "@/lib/auth.jsx";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +59,7 @@ export default function AdminStudents() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("list"); // New tab state for RFID registration
 
   // Fetch students data
   const {
@@ -307,551 +309,607 @@ export default function AdminStudents() {
           </div>
         </div>
 
-        {/* Statistics Cards */}
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                    <i className="fas fa-users text-blue-600"></i>
-                  </div>
-                  Total Students
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
-                  {stats.total}
-                </div>
-                <p className="text-xs text-gray-500">Registered students</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                    <i className="fas fa-user-check text-green-600"></i>
-                  </div>
-                  Active Students
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {stats.active}
-                </div>
-                <p className="text-xs text-gray-500">Currently active</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                    <i className="fas fa-face-smile text-purple-600"></i>
-                  </div>
-                  Face Enrolled
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-purple-600">
-                  {stats.faceEnrolled}
-                </div>
-                <p className="text-xs text-gray-500">Face recognition ready</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-                  <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
-                    <i className="fas fa-credit-card text-orange-600"></i>
-                  </div>
-                  RFID Enrolled
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-600">
-                  {stats.rfidEnrolled}
-                </div>
-                <p className="text-xs text-gray-500">With RFID cards</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
-                  <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
-                    <i className="fas fa-user-slash text-red-600"></i>
-                  </div>
-                  Inactive
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
-                  {stats.inactive}
-                </div>
-                <p className="text-xs text-gray-500">Deactivated accounts</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Filters and Search */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-              <div className="md:col-span-2">
-                <Input
-                  placeholder="Search students (name, ID, email, NIC)..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="face_enrolled">Face Enrolled</SelectItem>
-                  <SelectItem value="rfid_enrolled">RFID Enrolled</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select
-                value={filterDepartment}
-                onValueChange={setFilterDepartment}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Department" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Departments</SelectItem>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={filterBatch} onValueChange={setFilterBatch}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Batch" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Batches</SelectItem>
-                  {batches.map((batch) => (
-                    <SelectItem key={batch} value={batch}>
-                      {batch}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="studentId">Student ID</SelectItem>
-                  <SelectItem value="department">Department</SelectItem>
-                  <SelectItem value="batch">Batch</SelectItem>
-                  <SelectItem value="recent">Recently Added</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Students Table */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Students ({filteredStudents.length})
-              </h3>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Student
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Academic Info
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      RFID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Face Recognition
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredStudents.map((student) => (
-                    <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                              <i className="fas fa-user text-gray-600"></i>
-                            </div>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {student.fullName}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {student.studentId} • {student.email}
-                            </div>
-                            {student.nic && (
-                              <div className="text-xs text-gray-400">
-                                NIC: {student.nic}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div>
-                          <div className="font-medium">
-                            {student.department || "N/A"}
-                          </div>
-                          <div className="text-gray-500">
-                            {student.batch && `Batch: ${student.batch}`}
-                            {student.semester && ` • Sem: ${student.semester}`}
-                          </div>
-                          {student.gpa && (
-                            <div className="text-xs text-gray-400">
-                              GPA: {student.gpa}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {student.rfidCard ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-blue-100 text-blue-800"
-                          >
-                            <i className="fas fa-credit-card mr-1"></i>
-                            {student.rfidCard}
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-gray-500">
-                            <i className="fas fa-times mr-1"></i>
-                            No RFID
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {student.faceRegistrationStatus === "completed" ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-green-100 text-green-800"
-                          >
-                            <i className="fas fa-check mr-1"></i>
-                            Enrolled
-                          </Badge>
-                        ) : student.faceRegistrationStatus === "pending" ? (
-                          <Badge
-                            variant="secondary"
-                            className="bg-yellow-100 text-yellow-800"
-                          >
-                            <i className="fas fa-clock mr-1"></i>
-                            Pending
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-gray-500">
-                            <i className="fas fa-times mr-1"></i>
-                            Not Enrolled
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge
-                          variant={student.active ? "secondary" : "destructive"}
-                          className={
-                            student.active ? "bg-green-100 text-green-800" : ""
-                          }
-                        >
-                          {student.active ? "Active" : "Inactive"}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedStudent(student);
-                              setIsViewDialogOpen(true);
-                            }}
-                          >
-                            <i className="fas fa-eye"></i>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedStudent(student);
-                              setIsEditDialogOpen(true);
-                            }}
-                          >
-                            <i className="fas fa-edit"></i>
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteStudent(student)}
-                          >
-                            <i className="fas fa-trash"></i>
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {filteredStudents.length === 0 && (
-                <div className="text-center py-12">
-                  <i className="fas fa-users text-4xl text-gray-300 mb-4"></i>
-                  <p className="text-gray-500 text-lg">No students found</p>
-                  <p className="text-gray-400 text-sm">
-                    Try adjusting your search or filters
-                  </p>
-                </div>
-              )}
-            </div>
+        {/* Main Navigation Tabs */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="px-6">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="list" className="flex items-center gap-2">
+                  <i className="fas fa-list"></i>
+                  Student List
+                </TabsTrigger>
+                <TabsTrigger
+                  value="rfid-register"
+                  className="flex items-center gap-2"
+                >
+                  <i className="fas fa-credit-card"></i>
+                  RFID Registration
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </div>
-      </div>
 
-      {/* Edit Student Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Student Information</DialogTitle>
-            <DialogDescription>
-              Update student details, RFID card, and face recognition data
-            </DialogDescription>
-          </DialogHeader>
-          {selectedStudent && (
-            <EnhancedStudentForm
-              student={selectedStudent}
-              onSubmit={(data) =>
-                updateStudentMutation.mutate({
-                  id: selectedStudent.id,
-                  ...data,
-                })
-              }
-              isLoading={updateStudentMutation.isPending}
-              onCancel={() => setIsEditDialogOpen(false)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+        {/* Tab Content */}
+        <div className="p-6">
+          {activeTab === "list" && (
+            <>
+              {/* Statistics Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <i className="fas fa-users text-blue-600"></i>
+                      </div>
+                      Total Students
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {stats.total}
+                    </div>
+                    <p className="text-xs text-gray-500">Registered students</p>
+                  </CardContent>
+                </Card>
 
-      {/* View Student Details Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Student Details</DialogTitle>
-          </DialogHeader>
-          {selectedStudent && (
-            <div className="space-y-6">
-              <Tabs defaultValue="personal" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="personal">Personal Info</TabsTrigger>
-                  <TabsTrigger value="academic">Academic Info</TabsTrigger>
-                  <TabsTrigger value="technical">Technical Info</TabsTrigger>
-                  <TabsTrigger value="attendance">Attendance</TabsTrigger>
-                </TabsList>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                        <i className="fas fa-user-check text-green-600"></i>
+                      </div>
+                      Active Students
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-green-600">
+                      {stats.active}
+                    </div>
+                    <p className="text-xs text-gray-500">Currently active</p>
+                  </CardContent>
+                </Card>
 
-                <TabsContent value="personal" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-medium text-gray-900">Full Name</h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.fullName}
-                      </p>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                        <i className="fas fa-face-smile text-purple-600"></i>
+                      </div>
+                      Face Enrolled
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {stats.faceEnrolled}
                     </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">Email</h4>
-                      <p className="text-gray-600">{selectedStudent.email}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">Student ID</h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.studentId}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">NIC</h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.nic || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        Mobile Number
-                      </h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.mobileNumber || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">Gender</h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.gender || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="academic" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-medium text-gray-900">Department</h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.department || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">Batch</h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.batch || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">Semester</h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.semester || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">GPA</h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.gpa || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        Enrollment Year
-                      </h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.enrollmentYear}
-                      </p>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="technical" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-medium text-gray-900">RFID Card</h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.rfidCard || "Not Assigned"}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        Face Recognition Status
-                      </h4>
-                      <Badge
-                        variant={
-                          selectedStudent.faceRegistrationStatus === "completed"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {selectedStudent.faceRegistrationStatus ||
-                          "Not Enrolled"}
-                      </Badge>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        Account Status
-                      </h4>
-                      <Badge
-                        variant={
-                          selectedStudent.active ? "default" : "destructive"
-                        }
-                      >
-                        {selectedStudent.active ? "Active" : "Inactive"}
-                      </Badge>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        Registration Date
-                      </h4>
-                      <p className="text-gray-600">
-                        {selectedStudent.createdAt
-                          ? new Date(
-                              selectedStudent.createdAt
-                            ).toLocaleDateString()
-                          : "N/A"}
-                      </p>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="attendance" className="space-y-4">
-                  <div className="text-center py-8">
-                    <i className="fas fa-chart-line text-4xl text-gray-300 mb-4"></i>
-                    <p className="text-gray-500">
-                      Attendance tracking will be available soon
+                    <p className="text-xs text-gray-500">
+                      Face recognition ready
                     </p>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+                  </CardContent>
+                </Card>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Student</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <strong>{studentToDelete?.fullName}</strong>? This action cannot
-              be undone and will permanently remove all student data including
-              attendance records, RFID assignments, and face recognition data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-red-600 hover:bg-red-700"
-              disabled={deleteStudentMutation.isPending}
-            >
-              {deleteStudentMutation.isPending
-                ? "Deleting..."
-                : "Delete Student"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
+                      <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                        <i className="fas fa-credit-card text-orange-600"></i>
+                      </div>
+                      RFID Enrolled
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-orange-600">
+                      {stats.rfidEnrolled}
+                    </div>
+                    <p className="text-xs text-gray-500">With RFID cards</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600 flex items-center">
+                      <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center mr-3">
+                        <i className="fas fa-user-slash text-red-600"></i>
+                      </div>
+                      Inactive
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-red-600">
+                      {stats.inactive}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Deactivated accounts
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Filters and Search */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                  <div className="md:col-span-2">
+                    <Input
+                      placeholder="Search students (name, ID, email, NIC)..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="face_enrolled">
+                        Face Enrolled
+                      </SelectItem>
+                      <SelectItem value="rfid_enrolled">
+                        RFID Enrolled
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={filterDepartment}
+                    onValueChange={setFilterDepartment}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Departments</SelectItem>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={filterBatch} onValueChange={setFilterBatch}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Batch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Batches</SelectItem>
+                      {batches.map((batch) => (
+                        <SelectItem key={batch} value={batch}>
+                          {batch}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Name</SelectItem>
+                      <SelectItem value="studentId">Student ID</SelectItem>
+                      <SelectItem value="department">Department</SelectItem>
+                      <SelectItem value="batch">Batch</SelectItem>
+                      <SelectItem value="recent">Recently Added</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Students Table */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Students ({filteredStudents.length})
+                  </h3>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Student
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Academic Info
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          RFID
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Face Recognition
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredStudents.map((student) => (
+                        <tr key={student.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10">
+                                <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                  <i className="fas fa-user text-gray-600"></i>
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {student.fullName}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {student.studentId} • {student.email}
+                                </div>
+                                {student.nic && (
+                                  <div className="text-xs text-gray-400">
+                                    NIC: {student.nic}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div>
+                              <div className="font-medium">
+                                {student.department || "N/A"}
+                              </div>
+                              <div className="text-gray-500">
+                                {student.batch && `Batch: ${student.batch}`}
+                                {student.semester &&
+                                  ` • Sem: ${student.semester}`}
+                              </div>
+                              {student.gpa && (
+                                <div className="text-xs text-gray-400">
+                                  GPA: {student.gpa}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {student.rfidCard ? (
+                              <Badge
+                                variant="secondary"
+                                className="bg-blue-100 text-blue-800"
+                              >
+                                <i className="fas fa-credit-card mr-1"></i>
+                                {student.rfidCard}
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="text-gray-500"
+                              >
+                                <i className="fas fa-times mr-1"></i>
+                                No RFID
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {student.faceRegistrationStatus === "completed" ? (
+                              <Badge
+                                variant="secondary"
+                                className="bg-green-100 text-green-800"
+                              >
+                                <i className="fas fa-check mr-1"></i>
+                                Enrolled
+                              </Badge>
+                            ) : student.faceRegistrationStatus === "pending" ? (
+                              <Badge
+                                variant="secondary"
+                                className="bg-yellow-100 text-yellow-800"
+                              >
+                                <i className="fas fa-clock mr-1"></i>
+                                Pending
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="text-gray-500"
+                              >
+                                <i className="fas fa-times mr-1"></i>
+                                Not Enrolled
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Badge
+                              variant={
+                                student.active ? "secondary" : "destructive"
+                              }
+                              className={
+                                student.active
+                                  ? "bg-green-100 text-green-800"
+                                  : ""
+                              }
+                            >
+                              {student.active ? "Active" : "Inactive"}
+                            </Badge>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedStudent(student);
+                                  setIsViewDialogOpen(true);
+                                }}
+                              >
+                                <i className="fas fa-eye"></i>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedStudent(student);
+                                  setIsEditDialogOpen(true);
+                                }}
+                              >
+                                <i className="fas fa-edit"></i>
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteStudent(student)}
+                              >
+                                <i className="fas fa-trash"></i>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {filteredStudents.length === 0 && (
+                    <div className="text-center py-12">
+                      <i className="fas fa-users text-4xl text-gray-300 mb-4"></i>
+                      <p className="text-gray-500 text-lg">No students found</p>
+                      <p className="text-gray-400 text-sm">
+                        Try adjusting your search or filters
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === "rfid-register" && <RFIDStudentRegistration />}
+        </div>
+
+        {/* Edit Student Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Student Information</DialogTitle>
+              <DialogDescription>
+                Update student details, RFID card, and face recognition data
+              </DialogDescription>
+            </DialogHeader>
+            {selectedStudent && (
+              <EnhancedStudentForm
+                student={selectedStudent}
+                onSubmit={(data) =>
+                  updateStudentMutation.mutate({
+                    id: selectedStudent.id,
+                    ...data,
+                  })
+                }
+                isLoading={updateStudentMutation.isPending}
+                onCancel={() => setIsEditDialogOpen(false)}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* View Student Details Dialog */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>Student Details</DialogTitle>
+            </DialogHeader>
+            {selectedStudent && (
+              <div className="space-y-6">
+                <Tabs defaultValue="personal" className="w-full">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="personal">Personal Info</TabsTrigger>
+                    <TabsTrigger value="academic">Academic Info</TabsTrigger>
+                    <TabsTrigger value="technical">Technical Info</TabsTrigger>
+                    <TabsTrigger value="attendance">Attendance</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="personal" className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Full Name</h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.fullName}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">Email</h4>
+                        <p className="text-gray-600">{selectedStudent.email}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Student ID
+                        </h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.studentId}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">NIC</h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.nic || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Mobile Number
+                        </h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.mobileNumber || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">Gender</h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.gender || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="academic" className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Department
+                        </h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.department || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">Batch</h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.batch || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">Semester</h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.semester || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">GPA</h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.gpa || "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Enrollment Year
+                        </h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.enrollmentYear}
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="technical" className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-gray-900">RFID Card</h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.rfidCard || "Not Assigned"}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Face Recognition Status
+                        </h4>
+                        <Badge
+                          variant={
+                            selectedStudent.faceRegistrationStatus ===
+                            "completed"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {selectedStudent.faceRegistrationStatus ||
+                            "Not Enrolled"}
+                        </Badge>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Account Status
+                        </h4>
+                        <Badge
+                          variant={
+                            selectedStudent.active ? "default" : "destructive"
+                          }
+                        >
+                          {selectedStudent.active ? "Active" : "Inactive"}
+                        </Badge>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          Registration Date
+                        </h4>
+                        <p className="text-gray-600">
+                          {selectedStudent.createdAt
+                            ? new Date(
+                                selectedStudent.createdAt
+                              ).toLocaleDateString()
+                            : "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="attendance" className="space-y-4">
+                    <div className="text-center py-8">
+                      <i className="fas fa-chart-line text-4xl text-gray-300 mb-4"></i>
+                      <p className="text-gray-500">
+                        Attendance tracking will be available soon
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Student</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete{" "}
+                <strong>{studentToDelete?.fullName}</strong>? This action cannot
+                be undone and will permanently remove all student data including
+                attendance records, RFID assignments, and face recognition data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-red-600 hover:bg-red-700"
+                disabled={deleteStudentMutation.isPending}
+              >
+                {deleteStudentMutation.isPending
+                  ? "Deleting..."
+                  : "Delete Student"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }

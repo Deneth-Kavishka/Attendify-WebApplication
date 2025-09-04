@@ -1,0 +1,135 @@
+-- Sample Data Part 3: Classes, Hardware Devices, and Attendance Records
+-- This script continues from sample-data-part1.sql and sample-data-part2.sql
+
+-- ===========================================
+-- CLASSES TABLE - 100+ Classes
+-- ===========================================
+
+INSERT INTO classes (id, class_name, lecturer_id, class_code, room, semester, academic_year, min_attendance_percentage, active, schedule, created_at) VALUES
+-- Computer Science Classes
+('class-cs-001', 'Introduction to Programming', 'lec-profile-cs-001', 'CS101', 'Room 101', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Wednesday", "Friday"], "time": "09:00-10:30"}', NOW()),
+('class-cs-002', 'Data Structures', 'lec-profile-cs-008', 'CS201', 'Room 102', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Tuesday", "Thursday"], "time": "10:00-11:30"}', NOW()),
+('class-cs-003', 'Algorithms', 'lec-profile-cs-007', 'CS301', 'Room 103', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Monday", "Wednesday"], "time": "14:00-15:30"}', NOW()),
+('class-cs-004', 'Database Systems', 'lec-profile-cs-003', 'CS401', 'Room 104', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Tuesday", "Thursday"], "time": "14:00-15:30"}', NOW()),
+('class-cs-005', 'Computer Networks', 'lec-profile-cs-004', 'CS402', 'Room 105', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Friday"], "time": "11:00-12:30"}', NOW()),
+('class-cs-006', 'Operating Systems', 'lec-profile-cs-006', 'CS403', 'Room 106', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Wednesday", "Friday"], "time": "09:00-10:30"}', NOW()),
+('class-cs-007', 'Artificial Intelligence', 'lec-profile-cs-001', 'CS501', 'Room 107', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Tuesday", "Thursday"], "time": "09:00-10:30"}', NOW()),
+('class-cs-008', 'Machine Learning', 'lec-profile-cs-002', 'CS502', 'Room 108', 'Fall 2024', '2024-2025', 85, true, '{"days": ["Monday", "Wednesday"], "time": "11:00-12:30"}', NOW()),
+('class-cs-009', 'Computer Graphics', 'lec-profile-cs-005', 'CS503', 'Room 109', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Tuesday", "Friday"], "time": "14:00-15:30"}', NOW()),
+('class-cs-010', 'Cybersecurity', 'lec-profile-cs-009', 'CS504', 'Room 110', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Monday", "Thursday"], "time": "10:00-11:30"}', NOW()),
+('class-cs-011', 'Software Architecture', 'lec-profile-cs-011', 'CS505', 'Room 111', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Wednesday", "Friday"], "time": "11:00-12:30"}', NOW()),
+('class-cs-012', 'Distributed Systems', 'lec-profile-cs-012', 'CS506', 'Room 112', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Tuesday", "Thursday"], "time": "15:30-17:00"}', NOW()),
+('class-cs-013', 'Computer Vision', 'lec-profile-cs-013', 'CS507', 'Room 113', 'Fall 2024', '2024-2025', 85, true, '{"days": ["Monday", "Wednesday"], "time": "15:30-17:00"}', NOW()),
+('class-cs-014', 'Natural Language Processing', 'lec-profile-cs-014', 'CS508', 'Room 114', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Tuesday", "Friday"], "time": "10:00-11:30"}', NOW()),
+('class-cs-015', 'Parallel Computing', 'lec-profile-cs-015', 'CS509', 'Room 115', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Thursday"], "time": "14:00-15:30"}', NOW()),
+('class-cs-016', 'Human-Computer Interaction', 'lec-profile-cs-010', 'CS510', 'Room 116', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Wednesday", "Friday"], "time": "10:00-11:30"}', NOW()),
+
+-- Information Technology Classes
+('class-it-001', 'Network Administration', 'lec-profile-it-001', 'IT101', 'Room 201', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Wednesday"], "time": "09:00-10:30"}', NOW()),
+('class-it-002', 'System Administration', 'lec-profile-it-002', 'IT201', 'Room 202', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Tuesday", "Thursday"], "time": "10:00-11:30"}', NOW()),
+('class-it-003', 'Cloud Computing', 'lec-profile-it-003', 'IT301', 'Room 203', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Monday", "Friday"], "time": "14:00-15:30"}', NOW()),
+('class-it-004', 'IT Security', 'lec-profile-it-004', 'IT401', 'Room 204', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Tuesday", "Thursday"], "time": "14:00-15:30"}', NOW()),
+('class-it-005', 'DevOps', 'lec-profile-it-005', 'IT402', 'Room 205', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Wednesday", "Friday"], "time": "11:00-12:30"}', NOW()),
+('class-it-006', 'IT Project Management', 'lec-profile-it-006', 'IT403', 'Room 206', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Wednesday"], "time": "11:00-12:30"}', NOW()),
+('class-it-007', 'Enterprise Systems', 'lec-profile-it-007', 'IT501', 'Room 207', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Tuesday", "Thursday"], "time": "09:00-10:30"}', NOW()),
+('class-it-008', 'Business Intelligence', 'lec-profile-it-008', 'IT502', 'Room 208', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Friday"], "time": "10:00-11:30"}', NOW()),
+('class-it-009', 'IT Governance', 'lec-profile-it-009', 'IT503', 'Room 209', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Wednesday", "Thursday"], "time": "14:00-15:30"}', NOW()),
+('class-it-010', 'IT Service Management', 'lec-profile-it-010', 'IT504', 'Room 210', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Tuesday", "Friday"], "time": "15:30-17:00"}', NOW()),
+('class-it-011', 'Infrastructure Management', 'lec-profile-it-011', 'IT505', 'Room 211', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Monday", "Thursday"], "time": "15:30-17:00"}', NOW()),
+('class-it-012', 'IT Risk Management', 'lec-profile-it-012', 'IT506', 'Room 212', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Wednesday", "Friday"], "time": "09:00-10:30"}', NOW()),
+('class-it-013', 'Digital Transformation', 'lec-profile-it-013', 'IT507', 'Room 213', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Tuesday", "Thursday"], "time": "11:00-12:30"}', NOW()),
+('class-it-014', 'IT Consulting', 'lec-profile-it-014', 'IT508', 'Room 214', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Wednesday"], "time": "15:30-17:00"}', NOW()),
+('class-it-015', 'IT Operations', 'lec-profile-it-015', 'IT509', 'Room 215', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Thursday", "Friday"], "time": "10:00-11:30"}', NOW()),
+
+-- Software Engineering Classes
+('class-se-001', 'Software Design Patterns', 'lec-profile-se-001', 'SE101', 'Room 301', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Monday", "Wednesday"], "time": "09:00-10:30"}', NOW()),
+('class-se-002', 'Agile Development', 'lec-profile-se-002', 'SE201', 'Room 302', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Tuesday", "Thursday"], "time": "10:00-11:30"}', NOW()),
+('class-se-003', 'Software Testing', 'lec-profile-se-003', 'SE301', 'Room 303', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Monday", "Friday"], "time": "14:00-15:30"}', NOW()),
+('class-se-004', 'Requirements Engineering', 'lec-profile-se-004', 'SE401', 'Room 304', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Tuesday", "Thursday"], "time": "14:00-15:30"}', NOW()),
+('class-se-005', 'Software Quality Assurance', 'lec-profile-se-005', 'SE402', 'Room 305', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Wednesday", "Friday"], "time": "11:00-12:30"}', NOW()),
+('class-se-006', 'Software Project Management', 'lec-profile-se-006', 'SE403', 'Room 306', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Wednesday"], "time": "11:00-12:30"}', NOW()),
+('class-se-007', 'Software Maintenance', 'lec-profile-se-007', 'SE501', 'Room 307', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Tuesday", "Thursday"], "time": "09:00-10:30"}', NOW()),
+('class-se-008', 'Software Metrics', 'lec-profile-se-008', 'SE502', 'Room 308', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Friday"], "time": "10:00-11:30"}', NOW()),
+('class-se-009', 'Software Configuration Management', 'lec-profile-se-009', 'SE503', 'Room 309', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Wednesday", "Thursday"], "time": "14:00-15:30"}', NOW()),
+('class-se-010', 'Software Process Improvement', 'lec-profile-se-010', 'SE504', 'Room 310', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Tuesday", "Friday"], "time": "15:30-17:00"}', NOW()),
+('class-se-011', 'Software Engineering Ethics', 'lec-profile-se-011', 'SE505', 'Room 311', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Thursday"], "time": "15:30-17:00"}', NOW()),
+('class-se-012', 'Software Documentation', 'lec-profile-se-012', 'SE506', 'Room 312', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Wednesday", "Friday"], "time": "09:00-10:30"}', NOW()),
+('class-se-013', 'Software Reverse Engineering', 'lec-profile-se-013', 'SE507', 'Room 313', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Tuesday", "Thursday"], "time": "11:00-12:30"}', NOW()),
+('class-se-014', 'Software Reengineering', 'lec-profile-se-014', 'SE508', 'Room 314', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Wednesday"], "time": "15:30-17:00"}', NOW()),
+('class-se-015', 'Software Evolution', 'lec-profile-se-015', 'SE509', 'Room 315', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Thursday", "Friday"], "time": "10:00-11:30"}', NOW()),
+
+-- Data Science Classes
+('class-ds-001', 'Statistical Analysis', 'lec-profile-ds-001', 'DS101', 'Room 401', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Monday", "Wednesday"], "time": "09:00-10:30"}', NOW()),
+('class-ds-002', 'Data Mining', 'lec-profile-ds-002', 'DS201', 'Room 402', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Tuesday", "Thursday"], "time": "10:00-11:30"}', NOW()),
+('class-ds-003', 'Big Data Analytics', 'lec-profile-ds-003', 'DS301', 'Room 403', 'Fall 2024', '2024-2025', 85, true, '{"days": ["Monday", "Friday"], "time": "14:00-15:30"}', NOW()),
+('class-ds-004', 'Data Visualization', 'lec-profile-ds-004', 'DS401', 'Room 404', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Tuesday", "Thursday"], "time": "14:00-15:30"}', NOW()),
+('class-ds-005', 'Predictive Modeling', 'lec-profile-ds-005', 'DS402', 'Room 405', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Wednesday", "Friday"], "time": "11:00-12:30"}', NOW()),
+('class-ds-006', 'Business Analytics', 'lec-profile-ds-006', 'DS403', 'Room 406', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Monday", "Wednesday"], "time": "11:00-12:30"}', NOW()),
+('class-ds-007', 'Deep Learning', 'lec-profile-ds-007', 'DS501', 'Room 407', 'Fall 2024', '2024-2025', 85, true, '{"days": ["Tuesday", "Thursday"], "time": "09:00-10:30"}', NOW()),
+('class-ds-008', 'Data Engineering', 'lec-profile-ds-008', 'DS502', 'Room 408', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Monday", "Friday"], "time": "10:00-11:30"}', NOW()),
+('class-ds-009', 'Data Warehousing', 'lec-profile-ds-009', 'DS503', 'Room 409', 'Fall 2024', '2024-2025', 75, true, '{"days": ["Wednesday", "Thursday"], "time": "14:00-15:30"}', NOW()),
+('class-ds-010', 'Research Methods', 'lec-profile-ds-010', 'DS504', 'Room 410', 'Fall 2024', '2024-2025', 80, true, '{"days": ["Tuesday", "Friday"], "time": "15:30-17:00"}', NOW());
+
+-- ===========================================
+-- HARDWARE DEVICES TABLE - 50+ Devices
+-- ===========================================
+
+INSERT INTO hardware_devices (id, device_id, device_type, location, status, last_heartbeat, configuration, created_at) VALUES
+-- ESP32-CAM Face Recognition Devices (25)
+('hw-cam-001', 'ESP32_CAM_001', 'esp32_cam', 'Room 101', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-002', 'ESP32_CAM_002', 'esp32_cam', 'Room 102', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-003', 'ESP32_CAM_003', 'esp32_cam', 'Room 103', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-004', 'ESP32_CAM_004', 'esp32_cam', 'Room 104', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-005', 'ESP32_CAM_005', 'esp32_cam', 'Room 105', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-006', 'ESP32_CAM_006', 'esp32_cam', 'Room 106', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-007', 'ESP32_CAM_007', 'esp32_cam', 'Room 107', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-008', 'ESP32_CAM_008', 'esp32_cam', 'Room 108', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-009', 'ESP32_CAM_009', 'esp32_cam', 'Room 109', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-010', 'ESP32_CAM_010', 'esp32_cam', 'Room 110', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-011', 'ESP32_CAM_011', 'esp32_cam', 'Room 201', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-012', 'ESP32_CAM_012', 'esp32_cam', 'Room 202', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-013', 'ESP32_CAM_013', 'esp32_cam', 'Room 203', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-014', 'ESP32_CAM_014', 'esp32_cam', 'Room 204', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-015', 'ESP32_CAM_015', 'esp32_cam', 'Room 205', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-016', 'ESP32_CAM_016', 'esp32_cam', 'Room 301', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-017', 'ESP32_CAM_017', 'esp32_cam', 'Room 302', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-018', 'ESP32_CAM_018', 'esp32_cam', 'Room 303', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-019', 'ESP32_CAM_019', 'esp32_cam', 'Room 304', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-020', 'ESP32_CAM_020', 'esp32_cam', 'Room 305', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-021', 'ESP32_CAM_021', 'esp32_cam', 'Room 401', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-022', 'ESP32_CAM_022', 'esp32_cam', 'Room 402', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-023', 'ESP32_CAM_023', 'esp32_cam', 'Room 403', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-024', 'ESP32_CAM_024', 'esp32_cam', 'Room 404', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+('hw-cam-025', 'ESP32_CAM_025', 'esp32_cam', 'Room 405', 'online', NOW(), '{"resolution": "640x480", "threshold": 0.85, "fps": 15}', NOW()),
+
+-- RFID Reader Devices (30)
+('hw-rfid-001', 'RFID_READER_001', 'rfid_reader', 'Main Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-002', 'RFID_READER_002', 'rfid_reader', 'Building A Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-003', 'RFID_READER_003', 'rfid_reader', 'Building B Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-004', 'RFID_READER_004', 'rfid_reader', 'Library Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-005', 'RFID_READER_005', 'rfid_reader', 'Cafeteria Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-006', 'RFID_READER_006', 'rfid_reader', 'Room 101 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-007', 'RFID_READER_007', 'rfid_reader', 'Room 102 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-008', 'RFID_READER_008', 'rfid_reader', 'Room 103 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-009', 'RFID_READER_009', 'rfid_reader', 'Room 104 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-010', 'RFID_READER_010', 'rfid_reader', 'Room 105 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-011', 'RFID_READER_011', 'rfid_reader', 'Room 201 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-012', 'RFID_READER_012', 'rfid_reader', 'Room 202 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-013', 'RFID_READER_013', 'rfid_reader', 'Room 203 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-014', 'RFID_READER_014', 'rfid_reader', 'Room 204 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-015', 'RFID_READER_015', 'rfid_reader', 'Room 205 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-016', 'RFID_READER_016', 'rfid_reader', 'Room 301 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-017', 'RFID_READER_017', 'rfid_reader', 'Room 302 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-018', 'RFID_READER_018', 'rfid_reader', 'Room 303 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-019', 'RFID_READER_019', 'rfid_reader', 'Room 304 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-020', 'RFID_READER_020', 'rfid_reader', 'Room 305 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-021', 'RFID_READER_021', 'rfid_reader', 'Room 401 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-022', 'RFID_READER_022', 'rfid_reader', 'Room 402 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-023', 'RFID_READER_023', 'rfid_reader', 'Room 403 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-024', 'RFID_READER_024', 'rfid_reader', 'Room 404 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-025', 'RFID_READER_025', 'rfid_reader', 'Room 405 Entrance', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-026', 'RFID_READER_026', 'rfid_reader', 'Laboratory A', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-027', 'RFID_READER_027', 'rfid_reader', 'Laboratory B', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-028', 'RFID_READER_028', 'rfid_reader', 'Laboratory C', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-029', 'RFID_READER_029', 'rfid_reader', 'Auditorium', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW()),
+('hw-rfid-030', 'RFID_READER_030', 'rfid_reader', 'Conference Room', 'online', NOW(), '{"readRange": 10, "frequency": 125, "protocol": "EM4100"}', NOW());

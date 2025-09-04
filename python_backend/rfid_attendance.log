@@ -1,0 +1,10 @@
+2025-09-04 00:54:11,730 - INFO - Starting WebSocket server...
+2025-09-04 00:56:33,754 - INFO - Starting WebSocket server...
+2025-09-04 00:56:33,831 - INFO - server listening on 0.0.0.0:9000
+2025-09-04 00:56:33,832 - INFO - WebSocket server running on ws://0.0.0.0:9000
+2025-09-04 00:56:33,832 - INFO - Web dashboard available at http://192.168.8.110:5000
+2025-09-04 00:56:54,022 - INFO - System shutdown by user
+2025-09-04 00:57:02,955 - INFO - Starting WebSocket server...
+2025-09-04 00:57:03,010 - INFO - server listening on 0.0.0.0:9000
+2025-09-04 00:57:03,010 - INFO - WebSocket server running on ws://0.0.0.0:9000
+2025-09-04 00:57:03,011 - INFO - Web dashboard available at http://192.168.8.110:5000
