@@ -1053,7 +1053,7 @@ For issues, questions, or suggestions:
 
 ## Project Statistics
 
-
+```
 Language Composition:
 ├── JavaScript     : 66.7%
 ├── TypeScript     : 27.4%
@@ -1070,14 +1070,6 @@ Files:
 └── Utilities      : 20+
 Total: 165+ files
 
-```
-Lines of Code (Approximate):
-├── Frontend       : ~4000 LOC
-├── Backend        : ~3000 LOC
-├── Python Service : ~800 LOC
-├── Hardware       : ~600 LOC
-└── Shared Code    : ~400 LOC
-Total: ~8800 LOC
 ```
 
 ---
