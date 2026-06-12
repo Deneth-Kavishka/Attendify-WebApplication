@@ -1037,7 +1037,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 For issues, questions, or suggestions:
 
 - **GitHub Issues:** [Report a bug](https://github.com/Deneth-Kavishka/Attendify-WebApplication/issues)
-- **Email:** [project-contact@attendify.local](mailto:project-contact@attendify.local)
+- **Email:** [Deneth Kavishka](mailto:denethkavishkaedu1@gmail.com)
 - **Documentation:** Check [/docs](./docs) folder for detailed guides
 
 ---
@@ -1053,15 +1053,15 @@ For issues, questions, or suggestions:
 
 ## Project Statistics
 
-```
+
 Language Composition:
 ├── JavaScript     : 66.7%
 ├── TypeScript     : 27.4%
 ├── Python         : 2.8%
-├── C++            : 2.6%
+├── C++ for Arduino: 2.6%
 ├── CSS            : 0.3%
 └── HTML           : 0.2%
-
+```
 Lines of Code (Approximate):
 ├── Frontend       : ~4000 LOC
 ├── Backend        : ~3000 LOC
@@ -1069,7 +1069,7 @@ Lines of Code (Approximate):
 ├── Hardware       : ~600 LOC
 └── Shared Code    : ~400 LOC
 Total: ~8800 LOC
-
+```
 Files:
 ├── Components     : 50+
 ├── Pages          : 10+
@@ -1077,7 +1077,7 @@ Files:
 ├── Hardware Files : 5+
 └── Utilities      : 20+
 Total: 165+ files
-```
+
 
 ---
 
@@ -1089,6 +1089,6 @@ Total: 165+ files
 
 ---
 
-**Made with ❤️ by Deneth Kavishka**
+**Prepared by Deneth Kavishka**
 
 *Attendify - Making Attendance Smart, Simple, and Secure*
