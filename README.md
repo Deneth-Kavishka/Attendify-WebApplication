@@ -1061,6 +1061,15 @@ Language Composition:
 ├── C++ for Arduino: 2.6%
 ├── CSS            : 0.3%
 └── HTML           : 0.2%
+
+Files:
+├── Components     : 50+
+├── Pages          : 10+
+├── API Routes     : 80+
+├── Hardware Files : 5+
+└── Utilities      : 20+
+Total: 165+ files
+
 ```
 Lines of Code (Approximate):
 ├── Frontend       : ~4000 LOC
@@ -1070,14 +1079,6 @@ Lines of Code (Approximate):
 └── Shared Code    : ~400 LOC
 Total: ~8800 LOC
 ```
-Files:
-├── Components     : 50+
-├── Pages          : 10+
-├── API Routes     : 80+
-├── Hardware Files : 5+
-└── Utilities      : 20+
-Total: 165+ files
-
 
 ---
 
